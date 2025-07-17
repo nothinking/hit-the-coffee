@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useActionState, useTransition, type FormEvent } from "react"
+import { useState, useActionState, useTransition, type FormEvent, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +24,7 @@ interface OrderSelectionFormProps {
 
 export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSelectionFormProps) {
   const { toast } = useToast()
+  const formRef = useRef<HTMLFormElement>(null)
 
   /* UI state */
   const [participantName, setParticipantName] = useState("")
@@ -82,7 +83,9 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
       if (result && typeof result === "object" && "success" in result) {
         if (result.success) {
           toast({ title: "Order submitted!", description: result.message });
-          setSelected({});
+          setSelected({}); // 체크내역 리셋
+          setParticipantName(""); // 이름 입력란도 리셋
+          formRef.current?.reset(); // 폼 전체 강제 리셋
         } else {
           toast({
             title: "Submission failed",
@@ -105,11 +108,16 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
 
   /* ---------------------------------------------------------------------- */
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       {orderClosed ? (
-        <p className="text-center text-red-600 font-semibold py-8">
-          This order session is closed. You can no longer submit selections.
-        </p>
+        <div className="flex flex-col items-center justify-center py-8">
+          <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="40" fill="#FFD600"/>
+            <path d="M40 20 L44 36 L60 36 L46 44 L50 60 L40 50 L30 60 L34 44 L20 36 L36 36 Z" fill="#FF5252"/>
+            <text x="40" y="75" textAnchor="middle" fontSize="18" fill="#333" fontWeight="bold">끝!</text>
+          </svg>
+          <div className="mt-4 text-lg font-bold text-red-600">주문이 마감되었습니다!</div>
+        </div>
       ) : (
         <>
           {/* Name ---------------------------------------------------------- */}

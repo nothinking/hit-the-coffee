@@ -140,7 +140,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Link href={orderLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+          <Link href={orderLink} className="hover:underline">
             {order.title ? (
               <span>{order.title}</span>
             ) : (

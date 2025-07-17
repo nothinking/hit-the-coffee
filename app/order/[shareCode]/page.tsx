@@ -3,6 +3,7 @@ import { createSupabaseServer } from "@/lib/supabase-server"
 import { OrderSelectionForm } from "@/components/order-selection-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper";
+import OrderSelectionDeleteButton from "@/components/OrderSelectionDeleteButton";
 
 interface OrderPageProps {
   params: {
@@ -62,6 +63,22 @@ export default async function OrderPage({ params }: OrderPageProps) {
     // Continue rendering, but orderSelections will be null or empty
   }
 
+  // 메뉴별로 합치기
+  let mergedMenu: { name: string; price: number; quantity: number }[] = [];
+  if (orderSelections && orderSelections.length > 0) {
+    const merged: Record<string, { name: string; price: number; quantity: number }> = {};
+    orderSelections.forEach(sel => {
+      const menu = Array.isArray(sel.menu_items) ? sel.menu_items[0] : sel.menu_items;
+      if (!menu) return;
+      const key = `${menu.name}|${menu.price}`;
+      if (!merged[key]) {
+        merged[key] = { name: menu.name, price: menu.price, quantity: 0 };
+      }
+      merged[key].quantity += sel.quantity;
+    });
+    mergedMenu = Object.values(merged);
+  }
+
   return (
     <main className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
       <Card className="w-full max-w-2xl">
@@ -80,26 +97,101 @@ export default async function OrderPage({ params }: OrderPageProps) {
             menuItems={menuItems || []} // Pass empty array if no menu items
             orderStatus={order.status}
           />
+
           {/* Show saved order selections below the form */}
           <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-4">Saved Orders</h3>
-            {orderSelections && orderSelections.length > 0 ? (
-              <>
-                <div className="mb-2 text-sm text-gray-700">총 주문 수: {orderSelections.length}개</div>
-                <div className="space-y-2">
-                  {orderSelections.map((sel) => (
-                    <div key={sel.id} className="flex justify-between items-center border-b py-2 text-sm">
-                      <span className="font-medium">{sel.participant_name}</span>
-                      <span>{Array.isArray((sel.menu_items as any)) ? (sel.menu_items as any)[0]?.name || "Unknown Item" : (sel.menu_items as any)?.name || "Unknown Item"}</span>
-                      <span>×{sel.quantity}</span>
-                      <span>{Array.isArray((sel.menu_items as any)) ? `₩${(sel.menu_items as any)[0]?.price?.toFixed(2) ?? "-"}` : `₩${(sel.menu_items as any)?.price?.toFixed(2) ?? "-"}`}</span>
+            {/* 개별 주문리스트(참여자, 메뉴, 수량, 금액, 삭제) - 아래로 이동 */}
+            {orderSelections && orderSelections.length > 0 && (
+              <div className="bg-white border rounded-lg shadow p-4 max-w-md mx-auto">
+                <div className="grid grid-cols-[80px_1fr_40px_70px_40px] gap-x-2 font-bold text-gray-700 mb-2">
+                  <span>참여자</span><span>메뉴</span><span>수량</span><span>금액</span><span></span>
+                </div>
+                {orderSelections.map(sel => {
+                  const menuItems = sel.menu_items as any;
+                  return (
+                    <div key={sel.id} className="grid grid-cols-[80px_1fr_40px_70px_40px] gap-x-2 items-center py-1 rounded hover:bg-gray-50 transition">
+                      <span className="truncate">{sel.participant_name}</span>
+                      <span className="truncate text-left">{Array.isArray(menuItems) ? menuItems[0]?.name || "-" : menuItems?.name || "-"}</span>
+                      <span className="text-center">{sel.quantity}</span>
+                      <span className="text-right">{Array.isArray(menuItems) ? `₩${menuItems[0]?.price?.toFixed(2) ?? "-"}` : `₩${menuItems?.price?.toFixed(2) ?? "-"}`}</span>
+                      <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+                    </div>
+                  );
+                })}
+                <div className="flex justify-end text-sm mt-1 text-gray-600">
+                  총 수량: {orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)}
+                </div>
+              </div>
+            )}
+            {/* 영수증 박스 */}
+            <div className="bg-white border rounded-lg shadow font-mono max-w-md mx-auto p-6 text-sm mb-6 mt-8">
+              <div className="text-center text-lg font-bold mb-2 tracking-widest">RECEIPT</div>
+              <div className="grid grid-cols-[1fr_40px_70px] gap-x-2 mb-2">
+                <span>메뉴</span>
+                <span>수량</span>
+                <span>금액</span>
+              </div>
+              <hr className="mb-2" />
+              {mergedMenu.length > 0 ? (
+                <>
+                  {mergedMenu.map((item, idx) => (
+                    <div key={item.name + item.price} className="grid grid-cols-[1fr_40px_70px] gap-x-2 py-1 items-center">
+                      <span className="truncate text-left">{item.name}</span>
+                      <span className="text-center">{item.quantity}</span>
+                      <span className="text-right">₩{(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
-                </div>
-              </>
-            ) : (
-              <p className="text-gray-500">No orders submitted yet.</p>
-            )}
+                  <hr className="my-2" />
+                  <div className="flex justify-between font-bold text-base">
+                    <span>TOTAL</span>
+                    <span>
+                      ₩{mergedMenu.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-end text-sm mt-1 text-gray-600">
+                    총 수량: {mergedMenu.reduce((sum, item) => sum + item.quantity, 0)}
+                  </div>
+                  <div className="flex flex-col items-center mt-4">
+                    <svg width="180" height="40" viewBox="0 0 180 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="0" y="0" width="180" height="40" fill="#fff" />
+                      <rect x="10" y="10" width="2" height="20" fill="#222" />
+                      <rect x="16" y="10" width="1" height="20" fill="#222" />
+                      <rect x="20" y="10" width="3" height="20" fill="#222" />
+                      <rect x="26" y="10" width="2" height="20" fill="#222" />
+                      <rect x="32" y="10" width="1" height="20" fill="#222" />
+                      <rect x="36" y="10" width="2" height="20" fill="#222" />
+                      <rect x="42" y="10" width="3" height="20" fill="#222" />
+                      <rect x="48" y="10" width="1" height="20" fill="#222" />
+                      <rect x="52" y="10" width="2" height="20" fill="#222" />
+                      <rect x="58" y="10" width="3" height="20" fill="#222" />
+                      <rect x="64" y="10" width="1" height="20" fill="#222" />
+                      <rect x="68" y="10" width="2" height="20" fill="#222" />
+                      <rect x="74" y="10" width="3" height="20" fill="#222" />
+                      <rect x="80" y="10" width="1" height="20" fill="#222" />
+                      <rect x="84" y="10" width="2" height="20" fill="#222" />
+                      <rect x="90" y="10" width="3" height="20" fill="#222" />
+                      <rect x="96" y="10" width="1" height="20" fill="#222" />
+                      <rect x="100" y="10" width="2" height="20" fill="#222" />
+                      <rect x="106" y="10" width="3" height="20" fill="#222" />
+                      <rect x="112" y="10" width="1" height="20" fill="#222" />
+                      <rect x="116" y="10" width="2" height="20" fill="#222" />
+                      <rect x="122" y="10" width="3" height="20" fill="#222" />
+                      <rect x="128" y="10" width="1" height="20" fill="#222" />
+                      <rect x="132" y="10" width="2" height="20" fill="#222" />
+                      <rect x="138" y="10" width="3" height="20" fill="#222" />
+                      <rect x="144" y="10" width="1" height="20" fill="#222" />
+                      <rect x="148" y="10" width="2" height="20" fill="#222" />
+                      <rect x="154" y="10" width="3" height="20" fill="#222" />
+                      <rect x="160" y="10" width="1" height="20" fill="#222" />
+                      <rect x="164" y="10" width="2" height="20" fill="#222" />
+                    </svg>
+                    <div className="mt-2 text-base font-bold tracking-widest">THANK YOU</div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-gray-500 text-center py-8">No orders submitted yet.</div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
