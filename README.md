@@ -46,9 +46,9 @@
 
 ## 🖼️ 예시 화면
 
-| 메뉴 등록 | 영수증 출력 |
+| 메뉴 등록 | 메뉴 | 영수증 출력 |
 |-----------|--------------|
-| ![menu](./public/menu.png) | ![receipt](./public/receipt.png) |
+| ![ai](./public/ai.png) | ![menu](./public/menu.png) | ![receipt](./public/receipt.png) |
 
 > 위 이미지는 예시이며, 앱 실행 시 생성되는 실제 영수증 이미지입니다.
 
