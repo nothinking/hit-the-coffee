@@ -1,40 +1,21 @@
-# 1단계: Dependencies 설치
-FROM node:20-alpine AS deps
-
-# pnpm 설치
-RUN corepack enable && corepack prepare pnpm@latest --activate
-
-WORKDIR /app
-
-COPY package.json pnpm-lock.yaml ./
-
-RUN pnpm install
-
-# 2단계: 앱 빌드
-FROM node:20-alpine AS builder
+FROM mdock.daumkakao.io/node:18-alpine
+# 보안점검 이슈 대응
+# https://kakao.agit.in/g/300003371/wall/408612353#comment_panel_409208112
+RUN apk --no-cache add shadow && usermod --shell /sbin/nologin node
 
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+ARG PHASE
+ENV TZ=Asia/Seoul LANG=ko_KR.UTF-8 LANGUAGE=ko_KR.UTF-8 LC_ALL=ko_KR.UTF-8 PHASE=${PHASE}
+
 COPY . .
+RUN npm install && npm run build
 
-RUN pnpm build
+# .next 폴더 생성 및 권한 설정
+RUN chown -R nobody:nobody .next && chmod -R u+w .next
 
-# 3단계: 실행용 이미지
-FROM node:20-alpine AS runner
-
-WORKDIR /app
-
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# 빌드된 정적 파일과 의존성만 복사
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/next.config.js ./next.config.js
+USER nobody
 
 EXPOSE 3000
 
-CMD ["pnpm", "start"]
+ENTRYPOINT ["sh", "-c", "npm run start"]
