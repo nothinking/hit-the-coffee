@@ -7,6 +7,8 @@ import { OrderSessionCard } from "@/components/order-session-card"
 import { startNewOrder } from "./actions"
 import { useState } from "react"
 import { StartNewOrderForm } from "@/components/start-new-order-form"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { DeleteShopButton } from "@/components/delete-shop-button";
 
 interface CoffeeShopDetailPageProps {
   params: {
@@ -72,9 +74,17 @@ export default async function CoffeeShopDetailPage({ params }: CoffeeShopDetailP
 
   return (
     <main className="container mx-auto p-4 space-y-8">
+      <div className="flex justify-center w-full py-8 px-4 mb-8 bg-white rounded-xl shadow-lg border">
+        <div className="w-full max-w-2xl">
+          <StartNewOrderForm shopId={shopId} />
+        </div>
+      </div>
       <div className="flex justify-between items-center">
         <h1 className="text-4xl font-bold">{coffeeShop.name}</h1>
-        <p className="text-lg text-gray-600">{coffeeShop.address}</p>
+        <div className="flex items-center gap-4">
+          <p className="text-lg text-gray-600">{coffeeShop.address}</p>
+          <DeleteShopButton shopId={shopId} />
+        </div>
       </div>
 
       {/* Menu Management Section */}
@@ -87,7 +97,6 @@ export default async function CoffeeShopDetailPage({ params }: CoffeeShopDetailP
             <MenuItemForm shopId={shopId} />
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader>
             <CardTitle>Current Menu Items</CardTitle>
@@ -108,11 +117,6 @@ export default async function CoffeeShopDetailPage({ params }: CoffeeShopDetailP
 
       {/* Order Sessions Section */}
       <section className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-3xl font-bold">Order Sessions</h2>
-          <StartNewOrderForm shopId={shopId} />
-        </div>
-
         {orderSessions && orderSessions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {orderSessions.map((order) => (

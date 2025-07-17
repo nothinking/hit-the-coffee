@@ -56,13 +56,13 @@ export async function deleteMenuItem(shopId: string, itemId: string) {
   return { success: true, message: "Menu item deleted successfully!" }
 }
 
-export async function startNewOrder(shopId: string, title?: string) {
+export async function startNewOrder(shopId: string, title?: string, expiresInMinutes?: number) {
   const supabase = await createSupabaseServer()
   let shareCode = ""
   let isUnique = false
   let attempts = 0
 
-  // Generate a unique share code, retry if collision (unlikely for short codes)
+  // Generate a unique short code, retry if collision (unlikely for short codes)
   while (!isUnique && attempts < 5) {
     shareCode = generateShareCode()
     const { data, error } = await supabase.from("orders").select("id").eq("share_code", shareCode)
@@ -80,6 +80,13 @@ export async function startNewOrder(shopId: string, title?: string) {
     return { success: false, message: "Could not generate a unique share code after multiple attempts." }
   }
 
+  // expires_at 계산
+  let expires_at = null;
+  let minutes = (typeof expiresInMinutes === "number" && expiresInMinutes > 0)
+    ? expiresInMinutes
+    : 30;
+  expires_at = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+
   const { data, error } = await supabase
     .from("orders")
     .insert({
@@ -87,6 +94,7 @@ export async function startNewOrder(shopId: string, title?: string) {
       share_code: shareCode,
       status: "open",
       title: title ?? null,
+      expires_at,
     })
     .select()
     .single()

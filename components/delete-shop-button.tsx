@@ -15,7 +15,7 @@ export function DeleteShopButton({ shopId }: { shopId: string }) {
         if (!confirm("정말로 이 매장을 삭제하시겠습니까?")) return;
         setLoading(true)
         const result = await deleteShop(shopId)
-        if (result.success) router.refresh()
+        if (result.success) router.push('/shops')
         else alert(result.message)
         setLoading(false)
       }}

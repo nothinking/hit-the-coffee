@@ -49,7 +49,7 @@ export function MenuItemCard({ shopId, item }: MenuItemCardProps) {
         {item.description && <CardDescription>{item.description}</CardDescription>}
       </CardHeader>
       <CardContent className="flex justify-between items-center">
-        <p className="text-lg font-semibold">${item.price.toFixed(2)}</p>
+        <p className="text-lg font-semibold">{item.price.toFixed(2)}</p>
         <Button variant="destructive" size="sm" onClick={handleDelete} disabled={loading}>
           {loading ? "Deleting..." : "Delete"}
         </Button>

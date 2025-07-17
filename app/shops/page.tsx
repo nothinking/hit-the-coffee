@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { deleteShop } from "@/app/shop/[shopId]/actions"
 import { useRouter } from "next/navigation"
 import { DeleteShopButton } from "@/components/delete-shop-button"
+import { StartNewOrderForm } from "@/components/start-new-order-form";
 
 export default async function CoffeeShopListPage() {
   const supabase = await createSupabaseServer()
@@ -26,15 +27,16 @@ export default async function CoffeeShopListPage() {
           {coffeeShops.map((shop) => (
             <Card key={shop.id}>
               <CardHeader>
-                <CardTitle>{shop.name}</CardTitle>
+                <CardTitle>
+                  <Link href={`/shop/${shop.id}`} className="hover:underline">
+                    {shop.name}
+                  </Link>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {shop.address && <p className="text-sm text-gray-500 mb-2">{shop.address}</p>}
-                <div className="flex gap-2">
-                  <Button asChild variant="outline" className="w-full bg-transparent">
-                    <Link href={`/shop/${shop.id}`}>Manage Shop</Link>
-                  </Button>
-                  <DeleteShopButton shopId={shop.id} />
+                <div className="flex flex-col gap-2">
+                  <StartNewOrderForm shopId={shop.id} />
                 </div>
               </CardContent>
             </Card>

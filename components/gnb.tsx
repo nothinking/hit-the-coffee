@@ -5,7 +5,9 @@ export function GNB() {
   return (
     <nav className="w-full border-b bg-background">
       <div className="container mx-auto px-4 py-2 flex items-center justify-between">
-        <span className="font-bold text-lg tracking-tight">Coffee Order</span>
+        <Link href="/" className="font-bold text-lg tracking-tight">
+          내가쏜다
+        </Link>
         <NavigationMenu>
           <NavigationMenuList>
             <NavigationMenuItem>

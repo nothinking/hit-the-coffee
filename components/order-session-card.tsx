@@ -2,14 +2,15 @@
 
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { terminateOrder, deleteOrderSelection, deleteOrderSession } from "@/app/shop/[shopId]/actions"
-import { CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react" // Import icons
+import { CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, MessageCircle } from "lucide-react" // Import icons
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useRouter } from "next/navigation"
+import Link from "next/link";
 
 interface OrderSessionCardProps {
   shopId: string
@@ -37,8 +38,10 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
   const [loadingDeleteSelection, setLoadingDeleteSelection] = React.useState<string | null>(null) // Track loading for each selection
   const [loadingDelete, setLoadingDelete] = React.useState(false)
   const [isOpen, setIsOpen] = React.useState(false)
-
-  const orderLink = `${window.location.origin}/order/${order.share_code}`
+  const [orderLink, setOrderLink] = useState("");
+  useEffect(() => {
+    setOrderLink(`${window.location.origin}/order/${order.share_code}`);
+  }, [order.share_code]);
 
   async function handleTerminate() {
     setLoadingTerminate(true)
@@ -104,15 +107,46 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
   const totalSelectionsCount = orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)
   const totalOrderPrice = orderSelections.reduce((sum, sel) => sum + sel.quantity * sel.menu_items.price, 0)
 
+  // 남은 시간 실시간 카운트다운
+  const [remainingText, setRemainingText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!(order as any).expires_at) return;
+    let timer: NodeJS.Timeout;
+    function updateRemaining() {
+      const expiresAt = new Date((order as any).expires_at);
+      const now = new Date();
+      const diff = expiresAt.getTime() - now.getTime();
+      if (diff > 0) {
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setRemainingText(`남은 시간: ${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`);
+      } else {
+        setRemainingText("만료됨");
+      }
+    }
+    updateRemaining();
+    timer = setInterval(updateRemaining, 1000);
+    return () => clearInterval(timer);
+  }, [(order as any).expires_at]);
+
+  let expiresAtText = null;
+  if ((order as any).expires_at) {
+    const expiresAt = new Date((order as any).expires_at);
+    expiresAtText = `만료 시각: ${expiresAt.toLocaleString("ko-KR", { timeZone: "Asia/Seoul" }).replace(/\./g, "-")}`;
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {order.title ? (
-            <span>{order.title}</span>
-          ) : (
-            <span>Order Code: {order.share_code}</span>
-          )}
+          <Link href={orderLink} target="_blank" rel="noopener noreferrer" className="hover:underline">
+            {order.title ? (
+              <span>{order.title}</span>
+            ) : (
+              <span>Order Code: {order.share_code}</span>
+            )}
+          </Link>
           {order.status === "open" ? (
             <CheckCircle2 className="h-5 w-5 text-green-500" />
           ) : (
@@ -129,8 +163,14 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
           </Button>
         </CardTitle>
         <CardDescription>
-          Created: {new Date(order.created_at).toLocaleString()}
-          {order.closed_at && ` | Closed: ${new Date(order.closed_at).toLocaleString()}`}
+          Created: {new Date(order.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
+          {order.closed_at && ` | Closed: ${new Date(order.closed_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}`}
+          {remainingText && (
+            <span className="ml-2 font-semibold text-orange-600">{remainingText}</span>
+          )}
+          {expiresAtText && (
+            <span className="ml-2 text-xs text-gray-500">{expiresAtText}</span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -152,7 +192,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
         </div>
         {order.status === "open" && (
           <Button variant="destructive" className="w-full" onClick={handleTerminate} disabled={loadingTerminate}>
-            {loadingTerminate ? "Terminating..." : "Terminate Order"}
+            {loadingTerminate ? "중지 중..." : "중지"}
           </Button>
         )}
 
@@ -162,7 +202,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between px-4">
                 <span className="font-semibold">
-                  View Selections ({totalSelectionsCount} items, ${totalOrderPrice.toFixed(2)})
+                  View Selections ({totalSelectionsCount} items, ₩{totalOrderPrice.toFixed(2)})
                 </span>
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -175,7 +215,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
                     {selections.map((selection) => (
                       <li key={selection.id} className="flex justify-between items-center text-sm">
                         <span>
-                          {selection.quantity}x {selection.menu_items.name} (${selection.menu_items.price.toFixed(2)}{" "}
+                          {selection.quantity}x {selection.menu_items.name} (₩{selection.menu_items.price.toFixed(2)}{" "}
                           each)
                         </span>
                         <Button

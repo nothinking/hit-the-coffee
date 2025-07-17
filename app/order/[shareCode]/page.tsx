@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { createSupabaseServer } from "@/lib/supabase-server"
 import { OrderSelectionForm } from "@/components/order-selection-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper";
 
 interface OrderPageProps {
   params: {
@@ -66,9 +67,12 @@ export default async function OrderPage({ params }: OrderPageProps) {
       <Card className="w-full max-w-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">{coffeeShop.name}</CardTitle>
-          {coffeeShop.address && <CardDescription className="text-gray-600">{coffeeShop.address}</CardDescription>}
-          <h2 className="text-2xl font-semibold mt-4">Place Your Order</h2>
-          <p className="text-sm text-gray-500">Order Code: {order.share_code}</p>
+          <OrderCountdownInfoWrapper
+            createdAt={order.created_at}
+            expiresAt={order.expires_at}
+            title={order.title}
+            address={coffeeShop.address}
+          />
         </CardHeader>
         <CardContent>
           <OrderSelectionForm
@@ -88,7 +92,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                       <span className="font-medium">{sel.participant_name}</span>
                       <span>{Array.isArray((sel.menu_items as any)) ? (sel.menu_items as any)[0]?.name || "Unknown Item" : (sel.menu_items as any)?.name || "Unknown Item"}</span>
                       <span>×{sel.quantity}</span>
-                      <span>{Array.isArray((sel.menu_items as any)) ? `$${(sel.menu_items as any)[0]?.price?.toFixed(2) ?? "-"}` : `$${(sel.menu_items as any)?.price?.toFixed(2) ?? "-"}`}</span>
+                      <span>{Array.isArray((sel.menu_items as any)) ? `₩${(sel.menu_items as any)[0]?.price?.toFixed(2) ?? "-"}` : `₩${(sel.menu_items as any)?.price?.toFixed(2) ?? "-"}`}</span>
                     </div>
                   ))}
                 </div>

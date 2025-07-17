@@ -149,7 +149,7 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold">${item.price.toFixed(2)}</span>
+                      <span className="font-semibold">₩{item.price.toFixed(2)}</span>
                       {item.id in selected && (
                         <Input
                           type="number"
