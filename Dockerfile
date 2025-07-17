@@ -1,57 +1,40 @@
-# ---- Base Node image ----
-FROM node:20-alpine AS base
+# 1단계: Dependencies 설치
+FROM node:20-alpine AS deps
 
-# Set working directory
+# pnpm 설치
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@9.15.1 --activate
-
-# ---- Dependencies ----
-FROM base AS deps
-
-# Copy package manager files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies (frozen lockfile for reproducibility)
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install
 
-# ---- Build ----
-FROM deps AS build
+# 2단계: 앱 빌드
+FROM node:20-alpine AS builder
 
-# Copy the rest of the app source code
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the Next.js app
 RUN pnpm build
 
-# ---- Production image ----
-FROM base AS runner
+# 3단계: 실행용 이미지
+FROM node:20-alpine AS runner
 
-# Set NODE_ENV to production
+WORKDIR /app
+
 ENV NODE_ENV=production
+ENV PORT=3000
 
-# Set environment variables (document, do not hardcode secrets)
-# These must be provided at runtime (e.g., via docker run -e ...)
-# ENV NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-# ENV SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-# ENV GEMINI_API_KEY=your_gemini_api_key
+# 빌드된 정적 파일과 의존성만 복사
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/next.config.js ./next.config.js
 
-# Copy built app and only production deps
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/next.config.mjs ./next.config.mjs
-COPY --from=build /app/app ./app
-COPY --from=build /app/components ./components
-COPY --from=build /app/hooks ./hooks
-COPY --from=build /app/lib ./lib
-COPY --from=build /app/styles ./styles
-
-# Expose port (default for Next.js)
 EXPOSE 3000
 
-# Start the Next.js app
-CMD ["pnpm", "start"] 
+CMD ["pnpm", "start"]
