@@ -1,0 +1,206 @@
+"use client"
+
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import React from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useToast } from "@/hooks/use-toast"
+import { terminateOrder, deleteOrderSelection, deleteOrderSession } from "@/app/shop/[shopId]/actions"
+import { CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2 } from "lucide-react" // Import icons
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { useRouter } from "next/navigation"
+
+interface OrderSessionCardProps {
+  shopId: string
+  order: {
+    id: string
+    share_code: string
+    status: string
+    created_at: string
+    closed_at?: string | null
+    title?: string // Added title to the interface
+  }
+  orderSelections: Array<{
+    id: string
+    participant_name: string
+    quantity: number
+    menu_item_id: string
+    menu_items: { name: string; price: number } // Joined data
+  }>
+}
+
+export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessionCardProps) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [loadingTerminate, setLoadingTerminate] = React.useState(false)
+  const [loadingDeleteSelection, setLoadingDeleteSelection] = React.useState<string | null>(null) // Track loading for each selection
+  const [loadingDelete, setLoadingDelete] = React.useState(false)
+  const [isOpen, setIsOpen] = React.useState(false)
+
+  const orderLink = `${window.location.origin}/order/${order.share_code}`
+
+  async function handleTerminate() {
+    setLoadingTerminate(true)
+    const result = await terminateOrder(shopId, order.id)
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      })
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      })
+    }
+    setLoadingTerminate(false)
+  }
+
+  async function handleDeleteSelection(selectionId: string) {
+    setLoadingDeleteSelection(selectionId)
+    const result = await deleteOrderSelection(shopId, selectionId)
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: result.message,
+      })
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      })
+    }
+    setLoadingDeleteSelection(null)
+  }
+
+  async function handleDeleteSession() {
+    if (!confirm("정말로 이 주문 세션을 삭제하시겠습니까?")) return;
+    setLoadingDelete(true)
+    const result = await deleteOrderSession(shopId, order.id)
+    if (result.success) {
+      router.refresh()
+    } else {
+      alert(result.message)
+    }
+    setLoadingDelete(false)
+  }
+
+  // Group selections by participant name
+  const groupedSelections = orderSelections.reduce(
+    (acc, selection) => {
+      const name = selection.participant_name || "Anonymous"
+      if (!acc[name]) {
+        acc[name] = []
+      }
+      acc[name].push(selection)
+      return acc
+    },
+    {} as Record<string, typeof orderSelections>,
+  )
+
+  const totalSelectionsCount = orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)
+  const totalOrderPrice = orderSelections.reduce((sum, sel) => sum + sel.quantity * sel.menu_items.price, 0)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          {order.title ? (
+            <span>{order.title}</span>
+          ) : (
+            <span>Order Code: {order.share_code}</span>
+          )}
+          {order.status === "open" ? (
+            <CheckCircle2 className="h-5 w-5 text-green-500" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-500" />
+          )}
+          <Button
+            variant="destructive"
+            size="sm"
+            className="ml-auto"
+            onClick={handleDeleteSession}
+            disabled={loadingDelete}
+          >
+            {loadingDelete ? "Deleting..." : "Delete"}
+          </Button>
+        </CardTitle>
+        <CardDescription>
+          Created: {new Date(order.created_at).toLocaleString()}
+          {order.closed_at && ` | Closed: ${new Date(order.closed_at).toLocaleString()}`}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={`order-link-${order.id}`}>Share Link</Label>
+          <div className="flex items-center space-x-2">
+            <Input id={`order-link-${order.id}`} value={orderLink} readOnly />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(orderLink)
+                toast({ title: "Copied!", description: "Order link copied to clipboard." })
+              }}
+            >
+              Copy
+            </Button>
+          </div>
+        </div>
+        {order.status === "open" && (
+          <Button variant="destructive" className="w-full" onClick={handleTerminate} disabled={loadingTerminate}>
+            {loadingTerminate ? "Terminating..." : "Terminate Order"}
+          </Button>
+        )}
+
+        {/* Order Selections Section */}
+        {orderSelections.length > 0 && (
+          <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full space-y-2 mt-4">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="w-full justify-between px-4">
+                <span className="font-semibold">
+                  View Selections ({totalSelectionsCount} items, ${totalOrderPrice.toFixed(2)})
+                </span>
+                {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-4 p-2 border rounded-md bg-gray-50">
+              {Object.entries(groupedSelections).map(([participantName, selections]) => (
+                <div key={participantName} className="border-b pb-2 last:border-b-0 last:pb-0">
+                  <h4 className="font-bold text-md mb-2">{participantName}</h4>
+                  <ul className="space-y-1">
+                    {selections.map((selection) => (
+                      <li key={selection.id} className="flex justify-between items-center text-sm">
+                        <span>
+                          {selection.quantity}x {selection.menu_items.name} (${selection.menu_items.price.toFixed(2)}{" "}
+                          each)
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteSelection(selection.id)}
+                          disabled={loadingDeleteSelection === selection.id}
+                          className="h-6 w-6"
+                        >
+                          {loadingDeleteSelection === selection.id ? (
+                            <span className="animate-spin">...</span>
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          )}
+                          <span className="sr-only">Delete selection</span>
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
