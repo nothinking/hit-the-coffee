@@ -46,9 +46,9 @@
 
 ## 🖼️ 예시 화면
 
-| 메뉴 등록 | 주문 입력 | 영수증 출력 |
-|-----------|------------|--------------|
-| ![menu](./screenshots/menu.png) | ![order](./screenshots/order.png) | ![receipt](./screenshots/receipt.png) |
+| 메뉴 등록 | 영수증 출력 |
+|-----------|--------------|
+| ![menu](./public/menu.png) | ![receipt](./public/receipt.png) |
 
 > 위 이미지는 예시이며, 앱 실행 시 생성되는 실제 영수증 이미지입니다.
 
@@ -63,7 +63,3 @@
 - [ ] 자동으로 영수증 출력!
 
 ---
-
-## 💬 문의
-
-서비스 관련 문의는 [email@example.com](mailto:email@example.com) 또는 [GitHub Issues](https://github.com/your-repo/issues)를 이용해주세요.
