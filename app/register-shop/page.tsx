@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, type FormEvent, useRef } from "react"
+import { useState, type FormEvent, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createSupabaseBrowser } from "@/lib/supabase-browser"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { Camera, Upload, X, Edit3, Loader2 } from "lucide-react"
+import { createPortal } from "react-dom"
 
 interface MenuItem {
   name: string
@@ -26,6 +27,7 @@ export default function RegisterShopPage() {
   
   // Camera and menu extraction states
   const [showCamera, setShowCamera] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [extractedMenus, setExtractedMenus] = useState<MenuItem[]>([])
   const [isExtracting, setIsExtracting] = useState(false)
@@ -36,6 +38,27 @@ export default function RegisterShopPage() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ESC 키로 카메라 모달 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showCamera) {
+        stopCamera()
+      }
+    }
+
+    if (showCamera) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showCamera])
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -478,8 +501,8 @@ export default function RegisterShopPage() {
       </Card>
 
       {/* Camera Modal */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showCamera && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
             <div className="text-center mb-4">
               <h3 className="text-lg font-semibold">메뉴판 촬영</h3>
@@ -512,7 +535,8 @@ export default function RegisterShopPage() {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </main>
   )

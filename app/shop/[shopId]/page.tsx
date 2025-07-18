@@ -26,6 +26,7 @@ import {
   Clock
 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { 
   addMenuItem, 
   updateMenuItem, 
@@ -70,6 +71,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   
   // Camera states
   const [showCamera, setShowCamera] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -78,6 +80,27 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   useEffect(() => {
     loadShopData()
   }, [shopId])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ESC 키로 카메라 모달 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showCamera) {
+        stopCamera()
+      }
+    }
+
+    if (showCamera) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showCamera])
 
   async function loadShopData() {
     try {
@@ -405,7 +428,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             <p className="text-gray-600">새로운 주문 세션을 시작하세요</p>
           </CardHeader>
           <CardContent>
-            <StartNewOrderForm shopId={shopId} />
+            <StartNewOrderForm shopId={shopId} shopName={coffeeShop.name} />
           </CardContent>
         </Card>
 
@@ -797,8 +820,8 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
       </div>
 
       {/* Camera Modal */}
-      {showCamera && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showCamera && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
             <div className="text-center mb-4">
               <h3 className="text-lg font-semibold">메뉴판 촬영</h3>
@@ -830,7 +853,8 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </main>
   )

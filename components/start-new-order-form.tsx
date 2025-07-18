@@ -18,6 +18,23 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
     setMounted(true)
   }, [])
 
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showModal) {
+        setShowModal(false)
+      }
+    }
+
+    if (showModal) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showModal])
+
   // Gemini API를 사용한 세션 이름 자동 생성 함수
   async function generateFunTitle(): Promise<string> {
     try {

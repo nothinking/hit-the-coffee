@@ -3,14 +3,14 @@ import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuL
 
 export function GNB() {
   return (
-    <nav className="w-full bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 shadow-lg border-b border-blue-500/20">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 shadow-lg border-b border-blue-500/20">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
             <span className="text-blue-600 font-bold text-lg">🎯</span>
           </div>
           <span className="font-bold text-xl text-white tracking-tight group-hover:text-blue-100 transition-colors">
-            내가쏜다
+            주문취합
           </span>
         </Link>
         

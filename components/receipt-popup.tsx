@@ -1,7 +1,8 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { X, Receipt } from "lucide-react"
+import { createPortal } from "react-dom"
 
 interface ReceiptPopupProps {
   mergedMenu: { name: string; price: number; quantity: number }[]
@@ -11,6 +12,28 @@ interface ReceiptPopupProps {
 
 export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: ReceiptPopupProps) {
   const [showPopup, setShowPopup] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ESC 키로 팝업 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showPopup) {
+        setShowPopup(false)
+      }
+    }
+
+    if (showPopup) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showPopup])
 
   const totalAmount = mergedMenu.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const totalQuantity = mergedMenu.reduce((sum, item) => sum + item.quantity, 0)
@@ -26,13 +49,13 @@ export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: Receipt
           disabled={mergedMenu.length === 0}
         >
           <Receipt className="w-4 h-4 mr-2" />
-          영수증 보기
+          주문취합 보기
         </Button>
       </div>
 
       {/* Receipt Popup */}
-      {showPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showPopup && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
@@ -142,7 +165,8 @@ export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: Receipt
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )

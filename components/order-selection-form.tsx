@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { submitOrderSelections } from "@/app/order/[shareCode]/actions"
 import { X } from "lucide-react"
+import { createPortal } from "react-dom"
 
 interface MenuItem {
   id: string
@@ -32,6 +33,33 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
   const [isPending, startTransition] = useTransition() // isPending tracks the transition status
   const [showMenuPopup, setShowMenuPopup] = useState(false)
   const [showNamePopup, setShowNamePopup] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ESC 키로 팝업 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (showMenuPopup) {
+          setShowMenuPopup(false)
+        } else if (showNamePopup) {
+          setShowNamePopup(false)
+          setParticipantName("")
+        }
+      }
+    }
+
+    if (showMenuPopup || showNamePopup) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showMenuPopup, showNamePopup])
 
   const orderClosed = orderStatus === "closed"
 
@@ -130,8 +158,8 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
       )}
 
       {/* Menu Selection Popup */}
-      {showMenuPopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showMenuPopup && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
@@ -198,12 +226,13 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Name Input Popup */}
-      {showNamePopup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      {showNamePopup && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border-0">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -265,7 +294,8 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
