@@ -128,34 +128,91 @@ export default async function OrderPage({ params }: OrderPageProps) {
           <div className="mt-8">
             {/* 개별 주문리스트(참여자, 메뉴, 수량, 금액, 삭제) - 아래로 이동 */}
             {orderSelections && orderSelections.length > 0 && (
-              <div className="bg-white border rounded-lg shadow p-4 max-w-md mx-auto">
-                <div className="grid grid-cols-[80px_1fr_40px_70px_40px] gap-x-2 font-bold text-gray-700 mb-2">
-                  <span>참여자</span><span>메뉴</span><span>수량</span><span>금액</span><span></span>
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg p-6 max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-bold">📋</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">주문 현황</h3>
+                    <p className="text-sm text-gray-600">현재까지 주문된 메뉴들입니다</p>
+                  </div>
                 </div>
-                {orderSelections.map(sel => {
-                  const menuItems = sel.menu_items as any;
-                  return (
-                    <div key={sel.id} className="grid grid-cols-[80px_1fr_40px_70px_40px] gap-x-2 items-center py-1 rounded hover:bg-gray-50 transition">
-                      <span className="truncate">{sel.participant_name}</span>
-                      <span className="truncate text-left">{Array.isArray(menuItems) ? menuItems[0]?.name || "-" : menuItems?.name || "-"}</span>
-                      <span className="text-center">{sel.quantity}</span>
-                      <span className="text-right">{Array.isArray(menuItems) ? `${menuItems[0]?.price?.toFixed(2) ?? "-"}` : `${menuItems?.price?.toFixed(2) ?? "-"}`}</span>
-                      <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+
+                {/* Table Header */}
+                <div className="grid grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
+                  <span className="text-sm">참여자</span>
+                  <span className="text-sm">메뉴</span>
+                  <span className="text-sm text-center">수량</span>
+                  <span className="text-sm text-right">금액</span>
+                  <span className="text-sm text-center">관리</span>
+                </div>
+
+                {/* Table Rows */}
+                <div className="space-y-3">
+                  {orderSelections.map((sel, index) => {
+                    const menuItems = sel.menu_items as any;
+                    const menuName = Array.isArray(menuItems) ? menuItems[0]?.name || "-" : menuItems?.name || "-";
+                    const menuPrice = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
+                    
+                    return (
+                      <div key={sel.id} className="grid grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 items-center py-3 px-4 rounded-xl bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                            <span className="text-white text-xs font-bold">{sel.participant_name.charAt(0)}</span>
+                          </div>
+                          <span className="font-medium text-gray-900 truncate">{sel.participant_name}</span>
+                        </div>
+                        <span className="font-medium text-gray-800 truncate">{menuName}</span>
+                        <span className="text-center">
+                          <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                            {sel.quantity}
+                          </span>
+                        </span>
+                        <span className="text-right font-semibold text-blue-600">
+                          {menuPrice.toFixed(2)}
+                        </span>
+                        <div className="flex justify-center">
+                          <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Summary */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">총 주문 수량:</span>
+                      <span className="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-sm font-bold">
+                        {orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)}개
+                      </span>
                     </div>
-                  );
-                })}
-                <div className="flex justify-end text-sm mt-1 text-gray-600">
-                  총 수량: {orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-600">총 금액:</span>
+                      <span className="font-bold text-lg text-blue-600">
+                        {orderSelections.reduce((sum, sel) => {
+                          const menuItems = sel.menu_items as any;
+                          const price = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
+                          return sum + (price * sel.quantity);
+                        }, 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* 주문취합 보기 버튼 */}
+                  <div className="text-center">
+                    <ReceiptPopup 
+                      mergedMenu={mergedMenu}
+                      coffeeShopName={coffeeShop.name}
+                      orderTitle={order.title}
+                    />
+                  </div>
                 </div>
               </div>
             )}
-            
-            {/* Receipt Popup */}
-            <ReceiptPopup 
-              mergedMenu={mergedMenu}
-              coffeeShopName={coffeeShop.name}
-              orderTitle={order.title}
-            />
           </div>
         </CardContent>
       </Card>
