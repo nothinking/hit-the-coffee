@@ -24,7 +24,9 @@ import {
   Save,
   Coffee,
   Users,
-  Clock
+  Clock,
+  Mic,
+  MicOff
 } from "lucide-react"
 import { useState, useRef, useEffect } from "react"
 import { createPortal } from "react-dom"
@@ -35,6 +37,18 @@ import {
   resetAllMenus, 
   addMultipleMenus 
 } from "./actions"
+
+// Web Speech API 타입 정의
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start(): void
+  stop(): void
+  onresult: ((event: any) => void) | null
+  onerror: ((event: any) => void) | null
+  onend: (() => void) | null
+}
 
 interface MenuItem {
   id?: string
@@ -67,8 +81,17 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   // Image upload states
   const [showImageUpload, setShowImageUpload] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [textInput, setTextInput] = useState("")
+  const [textInputCompleted, setTextInputCompleted] = useState(false)
+  const [inputMethod, setInputMethod] = useState<'camera' | 'text' | 'voice' | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractionError, setExtractionError] = useState<string | null>(null)
+  
+  // Voice recognition states
+  const [isListening, setIsListening] = useState(false)
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false)
+  const [voiceText, setVoiceText] = useState("")
+  const [voiceError, setVoiceError] = useState<string | null>(null)
   
   // Camera states
   const [showCamera, setShowCamera] = useState(false)
@@ -76,6 +99,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   // Load data on component mount
   useEffect(() => {
@@ -84,6 +108,40 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
 
   useEffect(() => {
     setMounted(true)
+    
+    // 음성 인식 지원 확인
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      setIsVoiceSupported(true)
+      recognitionRef.current = new (window as any).webkitSpeechRecognition()
+      if (recognitionRef.current) {
+        recognitionRef.current.continuous = true
+        recognitionRef.current.interimResults = true
+        recognitionRef.current.lang = 'ko-KR'
+        
+        recognitionRef.current.onresult = (event: any) => {
+          let finalTranscript = ''
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript
+            }
+          }
+          if (finalTranscript) {
+            setVoiceText(prev => prev + finalTranscript)
+          }
+        }
+        
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error)
+          setVoiceError(`음성 인식 오류: ${event.error}`)
+          setIsListening(false)
+        }
+        
+        recognitionRef.current.onend = () => {
+          setIsListening(false)
+        }
+      }
+    }
   }, [])
 
   // ESC 키로 카메라 모달 닫기
@@ -213,17 +271,73 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
     }
   }
 
+  // Voice recognition functions
+  const startVoiceRecognition = () => {
+    if (!recognitionRef.current) return
+    
+    setVoiceError(null)
+    setVoiceText("")
+    setIsListening(true)
+    
+    try {
+      recognitionRef.current.start()
+      toast({
+        title: "음성 인식 시작",
+        description: "메뉴 정보를 말씀해주세요. 완료되면 '음성 입력 완료' 버튼을 눌러주세요."
+      })
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error)
+      setVoiceError("음성 인식을 시작할 수 없습니다.")
+      setIsListening(false)
+    }
+  }
+
+  const stopVoiceRecognition = () => {
+    if (!recognitionRef.current) return
+    
+    try {
+      recognitionRef.current.stop()
+      setIsListening(false)
+      toast({
+        title: "음성 인식 완료",
+        description: "음성 입력이 완료되었습니다."
+      })
+    } catch (error) {
+      console.error('Failed to stop speech recognition:', error)
+    }
+  }
+
+  const resetVoiceInput = () => {
+    setVoiceText("")
+    setVoiceError(null)
+    setIsListening(false)
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch (error) {
+        console.error('Failed to stop speech recognition:', error)
+      }
+    }
+  }
+
   async function extractMenuInfo() {
-    if (!capturedImage) return
+    // 음성 인식 텍스트가 있으면 그것을 사용, 없으면 textInput 사용
+    const textToExtract = voiceText || textInput
+    
+    if (!capturedImage && !textToExtract) return
 
     setIsExtracting(true)
     setExtractionError(null)
     try {
-      const response = await fetch(capturedImage)
-      const blob = await response.blob()
-
       const formData = new FormData()
-      formData.append('image', blob, 'menu.jpg')
+      
+      if (capturedImage && !textToExtract.trim()) {
+        const response = await fetch(capturedImage)
+        const blob = await response.blob()
+        formData.append('image', blob, 'menu.jpg')
+      } else if (textToExtract.trim()) {
+        formData.append('textInput', textToExtract)
+      }
 
       const extractResponse = await fetch('/api/extract-menu-info', {
         method: 'POST',
@@ -492,34 +606,206 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Image Upload Section */}
+            {/* Menu Input Section */}
             {showImageUpload && (
               <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">메뉴판 이미지 업로드</h3>
+                  <h3 className="text-lg font-semibold mb-2">메뉴 입력 방법 선택</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    메뉴판 사진을 찍어서 자동으로 메뉴를 등록할 수 있습니다
+                    카메라 촬영, 텍스트 입력, 음성 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
                   </p>
                 </div>
 
-                {!capturedImage ? (
-                  <div className="flex gap-2">
+                {!inputMethod ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                     <Button 
-                      onClick={startCamera} 
+                      onClick={() => setInputMethod('camera')} 
                       className="flex-1"
-                      variant="outline"
+                      size="lg"
                     >
                       <Camera className="w-4 h-4 mr-2" />
-                      카메라로 촬영
+                      카메라 촬영
                     </Button>
                     <Button 
-                      onClick={() => document.getElementById('file-input')?.click()} 
+                      onClick={() => setInputMethod('text')} 
                       className="flex-1"
                       variant="outline"
+                      size="lg"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      텍스트 입력
+                    </Button>
+                    {isVoiceSupported && (
+                      <Button 
+                        onClick={() => setInputMethod('voice')} 
+                        className="flex-1"
+                        variant="outline"
+                        size="lg"
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        음성 입력
+                      </Button>
+                    )}
+                    <Button 
+                      onClick={() => document.getElementById('image-file-input')?.click()} 
+                      className="flex-1"
+                      variant="outline"
+                      size="lg"
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      파일 선택
+                      이미지 업로드
                     </Button>
+                  </div>
+                ) : inputMethod === 'camera' && !capturedImage ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-8 bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
+                      <Camera className="w-16 h-16 mx-auto mb-4 text-blue-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴판 촬영</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        메뉴판이 잘 보이도록 촬영해주세요
+                      </p>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={startCamera} 
+                          className="flex-1"
+                          size="lg"
+                        >
+                          <Camera className="w-4 h-4 mr-2" />
+                          카메라로 촬영
+                        </Button>
+                        <Button 
+                          onClick={() => document.getElementById('file-input')?.click()} 
+                          className="flex-1"
+                          variant="outline"
+                          size="lg"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          파일 선택
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <input
+                      id="file-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (e) => {
+                            setCapturedImage(e.target?.result as string)
+                          }
+                          reader.readAsDataURL(file)
+                        }
+                      }}
+                    />
+                  </div>
+                ) : inputMethod === 'text' && !textInputCompleted ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-8 bg-green-50 rounded-lg border-2 border-dashed border-green-200">
+                      <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 텍스트 입력</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        각 줄에 하나의 메뉴를 입력해주세요. 줄바꿈으로 메뉴를 구분합니다.
+                      </p>
+                      <div className="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded">
+                        💡 <strong>입력 형식:</strong><br/>
+                        • 메뉴명 - 설명 - 가격원<br/>
+                        • 메뉴명 가격원 (설명 없음)<br/>
+                        • 메뉴명 설명 가격원
+                      </div>
+                      <Textarea
+                        value={textInput}
+                        onChange={(e) => setTextInput(e.target.value)}
+                        placeholder="각 줄에 하나의 메뉴를 입력하세요:
+
+아메리카노 - 진한 커피 - 4500원
+카페라떼 - 우유가 들어간 부드러운 커피 - 5000원
+카푸치노 - 우유 거품이 있는 커피 - 5000원
+에스프레소 - 강한 커피 - 3500원"
+                        rows={10}
+                        className="w-full"
+                      />
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          onClick={() => setTextInputCompleted(true)} 
+                          className="flex-1"
+                          disabled={!textInput.trim()}
+                        >
+                          텍스트 입력 완료
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setInputMethod(null)
+                            setTextInput("")
+                            setTextInputCompleted(false)
+                          }} 
+                          variant="outline"
+                        >
+                          다른 방법 선택
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : inputMethod === 'voice' && !voiceText ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-8 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
+                      <Mic className="w-16 h-16 mx-auto mb-4 text-purple-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">음성으로 메뉴 입력</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        메뉴 정보를 말씀해주세요. 예: "아메리카노 4500원, 카페라떼 5000원"
+                      </p>
+                      <div className="flex gap-2">
+                        <Button 
+                          onClick={startVoiceRecognition} 
+                          className="flex-1"
+                          disabled={isListening}
+                        >
+                          <Mic className="w-4 h-4 mr-2" />
+                          {isListening ? "음성 인식 중..." : "음성 인식 시작"}
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            setInputMethod(null)
+                            resetVoiceInput()
+                          }} 
+                          variant="outline"
+                        >
+                          다른 방법 선택
+                        </Button>
+                      </div>
+                      {voiceError && (
+                        <p className="text-sm text-red-600 mt-2">{voiceError}</p>
+                      )}
+                    </div>
+                  </div>
+                ) : inputMethod === 'voice' && voiceText ? (
+                  <div className="space-y-4">
+                    <div className="text-center p-8 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
+                      <Mic className="w-16 h-16 mx-auto mb-4 text-purple-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">음성 입력 결과</h3>
+                      <div className="bg-white p-4 rounded-lg border text-left">
+                        <p className="text-sm text-gray-700">{voiceText}</p>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          onClick={stopVoiceRecognition} 
+                          className="flex-1"
+                          disabled={!isListening}
+                        >
+                          <MicOff className="w-4 h-4 mr-2" />
+                          음성 입력 완료
+                        </Button>
+                        <Button 
+                          onClick={resetVoiceInput} 
+                          variant="outline"
+                        >
+                          다시 녹음
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -611,6 +897,24 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                       const reader = new FileReader()
                       reader.onload = (e) => {
                         setCapturedImage(e.target?.result as string)
+                      }
+                      reader.readAsDataURL(file)
+                    }
+                  }}
+                />
+                
+                <input
+                  id="image-file-input"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      const reader = new FileReader()
+                      reader.onload = (e) => {
+                        setCapturedImage(e.target?.result as string)
+                        setInputMethod('camera')
                       }
                       reader.readAsDataURL(file)
                     }
