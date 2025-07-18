@@ -9,8 +9,54 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Camera, Upload, X, Edit3, Loader2, ArrowLeft, ArrowRight } from "lucide-react"
+import { Camera, Upload, X, Edit3, Loader2, ArrowLeft, ArrowRight, Mic, MicOff } from "lucide-react"
 import { createPortal } from "react-dom"
+
+// Web Speech API 타입 정의
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start(): void
+  stop(): void
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  onend: (() => void) | null
+}
+
+interface SpeechRecognitionEvent {
+  resultIndex: number
+  results: SpeechRecognitionResultList
+}
+
+interface SpeechRecognitionResultList {
+  length: number
+  item(index: number): SpeechRecognitionResult
+  [index: number]: SpeechRecognitionResult
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean
+  length: number
+  item(index: number): SpeechRecognitionAlternative
+  [index: number]: SpeechRecognitionAlternative
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string
+  confidence: number
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition
+    webkitSpeechRecognition: new () => SpeechRecognition
+  }
+}
 
 interface MenuItem {
   name: string
@@ -34,19 +80,62 @@ export default function RegisterMenuPage() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [textInput, setTextInput] = useState("")
   const [textInputCompleted, setTextInputCompleted] = useState(false)
-  const [inputMethod, setInputMethod] = useState<'camera' | 'text' | null>(null)
+  const [inputMethod, setInputMethod] = useState<'camera' | 'text' | 'voice' | null>(null)
   const [extractedMenus, setExtractedMenus] = useState<MenuItem[]>([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [editingMenus, setEditingMenus] = useState<MenuItem[]>([])
   const [isEditing, setIsEditing] = useState(false)
   const [extractionError, setExtractionError] = useState<string | null>(null)
   
+  // Voice recognition states
+  const [isListening, setIsListening] = useState(false)
+  const [isVoiceSupported, setIsVoiceSupported] = useState(false)
+  const [voiceText, setVoiceText] = useState("")
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
 
   useEffect(() => {
     setMounted(true)
+    
+    // Check if speech recognition is supported
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setIsVoiceSupported(true)
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current.continuous = true
+      recognitionRef.current.interimResults = true
+      recognitionRef.current.lang = 'ko-KR'
+      
+      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+        let finalTranscript = ''
+        let interimTranscript = ''
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript
+          } else {
+            interimTranscript += transcript
+          }
+        }
+        
+        setVoiceText(prev => prev + finalTranscript)
+      }
+      
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+        console.error('Speech recognition error:', event.error)
+        setVoiceError(`음성 인식 오류: ${event.error}`)
+        setIsListening(false)
+      }
+      
+      recognitionRef.current.onend = () => {
+        setIsListening(false)
+      }
+    }
   }, [])
 
   // ESC 키로 카메라 모달 닫기
@@ -115,6 +204,55 @@ export default function RegisterMenuPage() {
     }
   }
 
+  // Voice recognition functions
+  const startVoiceRecognition = () => {
+    if (!recognitionRef.current) return
+    
+    setVoiceError(null)
+    setVoiceText("")
+    setIsListening(true)
+    
+    try {
+      recognitionRef.current.start()
+      toast({
+        title: "음성 인식 시작",
+        description: "메뉴 정보를 말씀해주세요. 완료되면 '음성 입력 완료' 버튼을 눌러주세요."
+      })
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error)
+      setVoiceError("음성 인식을 시작할 수 없습니다.")
+      setIsListening(false)
+    }
+  }
+
+  const stopVoiceRecognition = () => {
+    if (!recognitionRef.current) return
+    
+    try {
+      recognitionRef.current.stop()
+      setIsListening(false)
+      toast({
+        title: "음성 인식 완료",
+        description: "음성 입력이 완료되었습니다."
+      })
+    } catch (error) {
+      console.error('Failed to stop speech recognition:', error)
+    }
+  }
+
+  const resetVoiceInput = () => {
+    setVoiceText("")
+    setVoiceError(null)
+    setIsListening(false)
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch (error) {
+        console.error('Failed to stop speech recognition:', error)
+      }
+    }
+  }
+
   // Camera functions
   async function startCamera() {
     try {
@@ -166,7 +304,12 @@ export default function RegisterMenuPage() {
   }
 
   async function extractMenuInfo() {
-    if (!capturedImage && !textInput) return
+    // 음성 인식 텍스트가 있으면 그것을 사용, 없으면 textInput 사용
+    const textToExtract = voiceText || textInput
+    
+    console.log('Extracting menu from:', { voiceText, textInput, textToExtract })
+    
+    if (!capturedImage && !textToExtract) return
 
     setIsExtracting(true)
     setExtractionError(null)
@@ -178,8 +321,8 @@ export default function RegisterMenuPage() {
         const response = await fetch(capturedImage)
         const blob = await response.blob()
         formData.append('image', blob, 'menu.jpg')
-      } else if (textInput) {
-        formData.append('textInput', textInput)
+      } else if (textToExtract) {
+        formData.append('textInput', textToExtract)
       }
 
       const extractResponse = await fetch('/api/extract-menu-info', {
@@ -293,6 +436,17 @@ export default function RegisterMenuPage() {
     setEditingMenus([])
     setExtractionError(null)
     setCurrentStep('input')
+    // Reset voice input states
+    setVoiceText("")
+    setVoiceError(null)
+    setIsListening(false)
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop()
+      } catch (error) {
+        console.error('Failed to stop speech recognition:', error)
+      }
+    }
   }
 
   const steps = [
@@ -349,9 +503,9 @@ export default function RegisterMenuPage() {
                     <Camera className="w-16 h-16 mx-auto mb-4 text-blue-500" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 입력 방법 선택</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      카메라 촬영, 텍스트 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
+                      카메라 촬영, 텍스트 입력, 음성 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                       <Button 
                         onClick={() => setInputMethod('camera')} 
                         className="flex-1"
@@ -369,6 +523,17 @@ export default function RegisterMenuPage() {
                         <Edit3 className="w-4 h-4 mr-2" />
                         텍스트 입력
                       </Button>
+                      {isVoiceSupported && (
+                        <Button 
+                          onClick={() => setInputMethod('voice')} 
+                          className="flex-1"
+                          variant="outline"
+                          size="lg"
+                        >
+                          <Mic className="w-4 h-4 mr-2" />
+                          음성 입력
+                        </Button>
+                      )}
                       <Button 
                         onClick={() => document.getElementById('image-file-input')?.click()} 
                         className="flex-1"
@@ -487,6 +652,106 @@ export default function RegisterMenuPage() {
                       </Button>
                     </div>
                   </div>
+                </div>
+              ) : inputMethod === 'voice' && !voiceText && !isListening ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
+                    <Mic className="w-16 h-16 mx-auto mb-4 text-purple-500" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">음성으로 메뉴 입력</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      마이크 버튼을 눌러 메뉴 정보를 음성으로 입력해주세요
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={startVoiceRecognition} 
+                        className="flex-1"
+                        size="lg"
+                        disabled={!isVoiceSupported}
+                      >
+                        <Mic className="w-4 h-4 mr-2" />
+                        음성 인식 시작
+                      </Button>
+                      <Button 
+                        onClick={() => setInputMethod(null)} 
+                        className="flex-1"
+                        variant="outline"
+                        size="lg"
+                      >
+                        뒤로 가기
+                      </Button>
+                    </div>
+                    {!isVoiceSupported && (
+                      <p className="text-sm text-red-600 mt-2">
+                        이 브라우저는 음성 인식을 지원하지 않습니다.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : inputMethod === 'voice' && isListening ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                      <Mic className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">음성 인식 중...</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      메뉴 정보를 말씀해주세요. 완료되면 '음성 입력 완료' 버튼을 눌러주세요.
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={stopVoiceRecognition} 
+                        className="flex-1"
+                        size="lg"
+                        variant="destructive"
+                      >
+                        <MicOff className="w-4 h-4 mr-2" />
+                        음성 입력 완료
+                      </Button>
+                    </div>
+                    {voiceError && (
+                      <p className="text-sm text-red-600 mt-2">
+                        {voiceError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ) : inputMethod === 'voice' && voiceText && !extractedMenus.length ? (
+                <div className="space-y-4">
+                  {isExtracting ? (
+                    <div className="text-center p-8 bg-blue-50 rounded-lg">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-sm text-gray-600 mb-2">메뉴 정보를 추출하고 있습니다...</p>
+                      <p className="text-xs text-gray-500">잠시만 기다려주세요</p>
+                    </div>
+                  ) : (
+                    <div className="text-center p-8 bg-purple-50 rounded-lg border-2 border-dashed border-purple-200">
+                      <Mic className="w-16 h-16 mx-auto mb-4 text-purple-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">음성 입력 확인</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        인식된 음성을 확인하고 메뉴 정보를 추출합니다
+                      </p>
+                      <div className="p-4 bg-white rounded-lg border border-purple-200 text-left">
+                        <h4 className="font-medium text-purple-900 mb-2">인식된 음성:</h4>
+                        <pre className="text-sm text-purple-800 whitespace-pre-wrap">{voiceText}</pre>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          onClick={resetVoiceInput} 
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          다시 입력
+                        </Button>
+                        <Button 
+                          onClick={extractMenuInfo} 
+                          className="flex-1"
+                          size="lg"
+                        >
+                          🔍 메뉴 정보 추출하기
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : inputMethod === 'text' && textInputCompleted && !extractedMenus.length ? (
                 <div className="space-y-4">
