@@ -17,22 +17,25 @@ interface MenuItem {
   price: string
 }
 
-type Step = 'camera' | 'menu' | 'order'
+type Step = 'input' | 'menu' | 'order'
 
 export default function QuickOrderPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const [currentStep, setCurrentStep] = useState<Step>('camera')
+  const [currentStep, setCurrentStep] = useState<Step>('input')
   const [shopName, setShopName] = useState("")
   const [orderTitle, setOrderTitle] = useState("")
   const [expiresInMinutes, setExpiresInMinutes] = useState("30")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   
-  // Camera and menu extraction states
+  // Input and menu extraction states
   const [showCamera, setShowCamera] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [textInput, setTextInput] = useState("")
+  const [textInputCompleted, setTextInputCompleted] = useState(false)
+  const [inputMethod, setInputMethod] = useState<'camera' | 'text' | null>(null)
   const [extractedMenus, setExtractedMenus] = useState<MenuItem[]>([])
   const [isExtracting, setIsExtracting] = useState(false)
   const [editingMenus, setEditingMenus] = useState<MenuItem[]>([])
@@ -160,16 +163,20 @@ export default function QuickOrderPage() {
   }
 
   async function extractMenuInfo() {
-    if (!capturedImage) return
+    if (!capturedImage && !textInput) return
 
     setIsExtracting(true)
     setExtractionError(null)
     try {
-      const response = await fetch(capturedImage)
-      const blob = await response.blob()
-
       const formData = new FormData()
-      formData.append('image', blob, 'menu.jpg')
+      
+      if (capturedImage) {
+        const response = await fetch(capturedImage)
+        const blob = await response.blob()
+        formData.append('image', blob, 'menu.jpg')
+      } else if (textInput) {
+        formData.append('textInput', textInput)
+      }
 
       const extractResponse = await fetch('/api/extract-menu-info', {
         method: 'POST',
@@ -249,7 +256,7 @@ export default function QuickOrderPage() {
   }
 
   function goToNextStep() {
-    if (currentStep === 'camera' && capturedImage && extractedMenus.length > 0) {
+    if (currentStep === 'input' && extractedMenus.length > 0) {
       setCurrentStep('menu')
     } else if (currentStep === 'menu' && editingMenus.length > 0) {
       setCurrentStep('order')
@@ -258,22 +265,25 @@ export default function QuickOrderPage() {
 
   function goToPreviousStep() {
     if (currentStep === 'menu') {
-      setCurrentStep('camera')
+      setCurrentStep('input')
     } else if (currentStep === 'order') {
       setCurrentStep('menu')
     }
   }
 
-  function retakePhoto() {
+  function resetInput() {
     setCapturedImage(null)
+    setTextInput("")
+    setTextInputCompleted(false)
+    setInputMethod(null)
     setExtractedMenus([])
     setEditingMenus([])
     setExtractionError(null)
-    setCurrentStep('camera')
+    setCurrentStep('input')
   }
 
   const steps = [
-    { id: 'camera', title: '메뉴판 촬영', description: '카메라로 메뉴판을 촬영합니다' },
+    { id: 'input', title: '메뉴 입력', description: '카메라 촬영 또는 텍스트로 메뉴를 입력합니다' },
     { id: 'menu', title: '메뉴 확인', description: '추출된 메뉴를 확인하고 편집합니다' },
     { id: 'order', title: '주문 링크 생성', description: '주문 링크를 생성합니다' }
   ]
@@ -317,10 +327,66 @@ export default function QuickOrderPage() {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {/* Step 1: Camera */}
-          {currentStep === 'camera' && (
+          {/* Step 1: Input */}
+          {currentStep === 'input' && (
             <div className="space-y-4">
-              {!capturedImage ? (
+              {!inputMethod ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
+                    <Camera className="w-16 h-16 mx-auto mb-4 text-blue-500" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 입력 방법 선택</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      카메라 촬영, 텍스트 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <Button 
+                        onClick={() => setInputMethod('camera')} 
+                        className="flex-1"
+                        size="lg"
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        카메라 촬영
+                      </Button>
+                      <Button 
+                        onClick={() => setInputMethod('text')} 
+                        className="flex-1"
+                        variant="outline"
+                        size="lg"
+                      >
+                        <Edit3 className="w-4 h-4 mr-2" />
+                        텍스트 입력
+                      </Button>
+                      <Button 
+                        onClick={() => document.getElementById('image-file-input')?.click()} 
+                        className="flex-1"
+                        variant="outline"
+                        size="lg"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        이미지 업로드
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <input
+                    id="image-file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (e) => {
+                          setCapturedImage(e.target?.result as string)
+                          setInputMethod('camera')
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                  />
+                </div>
+              ) : inputMethod === 'camera' && !capturedImage ? (
                 <div className="space-y-4">
                   <div className="text-center p-8 bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
                     <Camera className="w-16 h-16 mx-auto mb-4 text-blue-500" />
@@ -366,6 +432,132 @@ export default function QuickOrderPage() {
                     }}
                   />
                 </div>
+              ) : inputMethod === 'text' && !textInputCompleted ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-green-50 rounded-lg border-2 border-dashed border-green-200">
+                    <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 텍스트 입력</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      메뉴 정보를 텍스트로 입력하거나 텍스트 파일(.txt)을 업로드해주세요
+                    </p>
+                    <Textarea
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      placeholder="예시:
+아메리카노 - 진한 커피 - 4500원
+카페라떼 - 우유가 들어간 부드러운 커피 - 5000원
+카푸치노 - 우유 거품이 있는 커피 - 5000원"
+                      rows={8}
+                      className="w-full"
+                    />
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        onClick={() => setInputMethod(null)} 
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        뒤로 가기
+                      </Button>
+                      <Button 
+                        onClick={() => document.getElementById('text-file-input')?.click()} 
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        파일 선택
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          if (textInput.trim()) {
+                            // 텍스트 입력 완료 후 다음 단계로
+                            setTextInput(textInput.trim())
+                            setTextInputCompleted(true)
+                          }
+                        }} 
+                        className="flex-1"
+                        disabled={!textInput.trim()}
+                        size="lg"
+                      >
+                        입력 완료
+                      </Button>
+                    </div>
+                    
+                    <input
+                      id="text-file-input"
+                      type="file"
+                      accept=".txt,.text"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (e) => {
+                            setTextInput(e.target?.result as string)
+                          }
+                          reader.readAsText(file)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : inputMethod === 'text' && textInputCompleted && !extractedMenus.length ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-green-50 rounded-lg border-2 border-dashed border-green-200">
+                    <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">입력된 텍스트 확인</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      입력한 텍스트를 확인하고 메뉴 정보를 추출합니다
+                    </p>
+                    <div className="p-4 bg-white rounded-lg border border-green-200 text-left">
+                      <h4 className="font-medium text-green-900 mb-2">입력된 텍스트:</h4>
+                      <pre className="text-sm text-green-800 whitespace-pre-wrap">{textInput}</pre>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button 
+                        onClick={() => {
+                          setTextInput("")
+                          setTextInputCompleted(false)
+                        }} 
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        다시 입력
+                      </Button>
+                      <Button 
+                        onClick={() => document.getElementById('text-file-input-confirm')?.click()} 
+                        variant="outline"
+                        className="flex-1"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        파일 변경
+                      </Button>
+                      <Button 
+                        onClick={extractMenuInfo} 
+                        className="flex-1"
+                        size="lg"
+                      >
+                        🔍 메뉴 정보 추출하기
+                      </Button>
+                    </div>
+                    
+                    <input
+                      id="text-file-input-confirm"
+                      type="file"
+                      accept=".txt,.text"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (e) => {
+                            setTextInput(e.target?.result as string)
+                          }
+                          reader.readAsText(file)
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div className="relative">
@@ -378,7 +570,7 @@ export default function QuickOrderPage() {
                       size="sm"
                       variant="destructive"
                       className="absolute top-2 right-2"
-                      onClick={retakePhoto}
+                      onClick={resetInput}
                     >
                       <X className="w-4 h-4" />
                     </Button>
@@ -387,7 +579,10 @@ export default function QuickOrderPage() {
                   {!isExtracting && extractedMenus.length === 0 && !extractionError && (
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
                       <p className="text-sm text-gray-600 mb-4">
-                        촬영한 사진에서 메뉴 정보를 자동으로 추출합니다
+                        {inputMethod === 'camera' 
+                          ? '촬영한 사진에서 메뉴 정보를 자동으로 추출합니다'
+                          : '입력한 텍스트에서 메뉴 정보를 자동으로 추출합니다'
+                        }
                       </p>
                       <Button 
                         onClick={extractMenuInfo} 
@@ -407,11 +602,11 @@ export default function QuickOrderPage() {
                         </p>
                         <div className="flex gap-2">
                           <Button 
-                            onClick={retakePhoto} 
+                            onClick={resetInput} 
                             variant="outline"
                             className="flex-1"
                           >
-                            📸 다시 촬영
+                            📸 다시 입력
                           </Button>
                           <Button 
                             onClick={extractMenuInfo} 
@@ -593,7 +788,7 @@ export default function QuickOrderPage() {
 
           {/* Navigation Buttons */}
           <div className="flex gap-2 pt-4 border-t">
-            {currentStep !== 'camera' && (
+            {currentStep !== 'input' && (
               <Button 
                 onClick={goToPreviousStep} 
                 variant="outline" 
@@ -604,7 +799,7 @@ export default function QuickOrderPage() {
               </Button>
             )}
             
-            {currentStep === 'camera' && capturedImage && extractedMenus.length > 0 && (
+            {currentStep === 'input' && extractedMenus.length > 0 && (
               <Button 
                 onClick={goToNextStep} 
                 className="flex-1"
