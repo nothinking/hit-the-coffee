@@ -16,9 +16,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="ko">
       <body>
         <GNB />
-        <div className="pt-20">
-          {children}
-        </div>
+        {children}
         <Toaster />
       </body>
     </html>

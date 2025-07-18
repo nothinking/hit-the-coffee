@@ -289,7 +289,7 @@ export default function QuickOrderPage() {
   ]
 
   return (
-    <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+    <main className="flex items-center justify-center min-h-screen p-4 pt-24 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold text-center">빠른 주문 링크 생성</CardTitle>

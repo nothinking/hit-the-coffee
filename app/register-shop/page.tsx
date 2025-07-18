@@ -246,7 +246,7 @@ export default function RegisterShopPage() {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen p-4">
+    <main className="flex items-center justify-center min-h-screen p-4 pt-24">
       <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold text-center">Register Coffee Shop</CardTitle>

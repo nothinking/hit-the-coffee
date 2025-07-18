@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 text-center">
+      <section className="container mx-auto px-4 pt-24 pb-16 text-center">
         <div className="max-w-4xl mx-auto">
           <Badge variant="secondary" className="mb-4">
             <ShoppingCart className="w-4 h-4 mr-2" />
@@ -35,7 +35,7 @@ export default function Home() {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/register-menu">
-                메뉴판으로 바로 링크 생성하기
+                메뉴판 등록
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
@@ -199,7 +199,7 @@ export default function Home() {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/register-menu">
-                메뉴판으로 바로 링크 생성하기
+                메뉴판 등록
               </Link>
             </Button>
           </div>

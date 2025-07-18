@@ -404,7 +404,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header Section */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b pt-20">
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-start">
             <div>

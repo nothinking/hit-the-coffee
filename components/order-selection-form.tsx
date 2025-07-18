@@ -160,9 +160,9 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
       {/* Menu Selection Popup */}
       {showMenuPopup && mounted && createPortal(
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border-0 max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between p-6 pb-4">
               <h3 className="text-xl font-bold text-gray-900">메뉴 선택</h3>
               <Button
                 onClick={() => setShowMenuPopup(false)}
@@ -174,56 +174,60 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
               </Button>
             </div>
 
-            {/* Menu List */}
-            <div className="space-y-3 mb-6">
-              {menuItems.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">☕</div>
-                  <p className="text-gray-500">메뉴가 준비 중입니다...</p>
-                </div>
-              ) : (
-                menuItems.map((item) => (
-                  <Card key={item.id} className="flex items-center justify-between p-4 hover:shadow-md transition-all duration-200 border-2 hover:border-blue-200">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        id={`item-${item.id}`}
-                        checked={selected[item.id] || false}
-                        onCheckedChange={(c) => toggleItem(item.id, c as boolean)}
-                        disabled={isPending}
-                        className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                      />
-                      <div className="leading-tight">
-                        <Label htmlFor={`item-${item.id}`} className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors">
-                          {item.name}
-                        </Label>
-                        {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
+            {/* Menu List - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-6 pb-4">
+              <div className="space-y-3">
+                {menuItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-4xl mb-2">☕</div>
+                    <p className="text-gray-500">메뉴가 준비 중입니다...</p>
+                  </div>
+                ) : (
+                  menuItems.map((item) => (
+                    <Card key={item.id} className="flex items-center justify-between p-4 hover:shadow-md transition-all duration-200 border-2 hover:border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          id={`item-${item.id}`}
+                          checked={selected[item.id] || false}
+                          onCheckedChange={(c) => toggleItem(item.id, c as boolean)}
+                          disabled={isPending}
+                          className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                        />
+                        <div className="leading-tight">
+                          <Label htmlFor={`item-${item.id}`} className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors">
+                            {item.name}
+                          </Label>
+                          {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
+                        </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-bold text-lg text-blue-600">{item.price.toFixed(2)}</span>
-                    </div>
-                  </Card>
-                ))
-              )}
+                      <div className="text-right">
+                        <span className="font-bold text-lg text-blue-600">{item.price.toFixed(2)}</span>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button
-                onClick={() => setShowMenuPopup(false)}
-                variant="outline"
-                className="flex-1"
-                disabled={isPending}
-              >
-                취소
-              </Button>
-              <Button
-                onClick={handleOrderButtonClick}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                disabled={isPending || Object.keys(selected).filter(id => selected[id]).length === 0}
-              >
-                주문하기
-              </Button>
+            {/* Action Buttons - Fixed at bottom */}
+            <div className="p-6 pt-4 border-t border-gray-100 bg-white rounded-b-2xl">
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => setShowMenuPopup(false)}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={isPending}
+                >
+                  취소
+                </Button>
+                <Button
+                  onClick={handleOrderButtonClick}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                  disabled={isPending || Object.keys(selected).filter(id => selected[id]).length === 0}
+                >
+                  주문하기
+                </Button>
+              </div>
             </div>
           </div>
         </div>,

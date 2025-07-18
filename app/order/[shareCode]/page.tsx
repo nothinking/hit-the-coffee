@@ -84,7 +84,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-24 pb-8">
         <div className="max-w-2xl mx-auto">
           {/* Header Section */}
           <div className="text-center mb-8">
