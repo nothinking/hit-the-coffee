@@ -10,6 +10,33 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
   const router = useRouter()
   const [expiresInMinutes, setExpiresInMinutes] = useState<string | number>(30);
 
+  // 재미있는 세션 이름 자동 생성 함수
+  function generateFunTitle(): string {
+    const funTitles = [
+      "기분이 좋아서",
+      "날씨가 좋아서",
+      "커피가 땡겨서",
+      "친구들과 함께",
+      "혼자 여유롭게",
+      "새로운 메뉴 시도",
+      "오늘은 특별히",
+      "스트레스 해소",
+      "기념일이어서",
+      "그냥 땡겨서",
+      "커피 한 잔의 여유",
+      "오후의 힐링",
+      "아침의 활력",
+      "저녁의 휴식",
+      "주말의 특별함",
+      "평일의 작은 선물",
+      "커피 향에 취해서",
+      "카페 분위기가 좋아서",
+      "새로운 카페 탐방",
+      "익숙한 맛이 그리워서"
+    ]
+    return funTitles[Math.floor(Math.random() * funTitles.length)]
+  }
+
 
   return (
     <form
@@ -21,10 +48,14 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
           const now = new Date();
           // UTC 기준으로 expires_at 계산
           const expiresAt = new Date(now.getTime() + minutes * 60 * 1000).toISOString();
+          
+          // 제목이 비어있으면 자동으로 재미있는 제목 생성
+          const finalTitle = title.trim() || generateFunTitle();
+          
           const res = await fetch("/api/start-new-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ shopId, title, expires_at: expiresAt })
+            body: JSON.stringify({ shopId, title: finalTitle, expires_at: expiresAt })
           })
           const data = await res.json()
           if (!data.success) setError(data.message)
@@ -47,9 +78,8 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-                        placeholder="왜 쏘나요?"
+          placeholder="왜 쏘나요? (비워두면 자동 생성)"
           className="border rounded px-2 py-1 flex-1 min-w-0"
-          required
           disabled={isPending}
         />
         <input
