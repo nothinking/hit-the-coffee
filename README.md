@@ -9,7 +9,7 @@
 
 ## 🌐 접속 주소
 
-**https://hit-the-coffee.vercel.app/order/viaiUb**
+**https://hit-the-coffee.vercel.app/**
 
 ---
 
