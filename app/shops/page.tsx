@@ -27,6 +27,16 @@ export default async function CoffeeShopListPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-4">매장 목록</h1>
           <p className="text-lg text-gray-600">원하는 매장에서 쏘세요~ 🎯</p>
           <p className="text-sm text-gray-500 mt-2">주문 취합이 편해 집니다</p>
+          
+          {/* 메뉴판 등록 버튼 */}
+          <div className="mt-6">
+            <Button asChild size="lg" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
+              <Link href="/register-menu">
+                <span className="mr-2">📸</span>
+                메뉴판 등록
+              </Link>
+            </Button>
+          </div>
         </div>
 
         {coffeeShops && coffeeShops.length > 0 ? (
