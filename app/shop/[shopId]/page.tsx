@@ -424,7 +424,6 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
         {/* Start New Order Section */}
         <Card className="bg-white shadow-lg border-0">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-gray-900">Start New Order</CardTitle>
             <p className="text-gray-600">새로운 주문 세션을 시작하세요</p>
           </CardHeader>
           <CardContent>
@@ -437,13 +436,6 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
-                <CardTitle className="text-2xl font-bold text-gray-900">Menu Management</CardTitle>
-                <p className="text-gray-600 mt-1">
-                  {menuItems.length > 0 
-                    ? `${menuItems.length}개의 메뉴가 등록되어 있습니다` 
-                    : "등록된 메뉴가 없습니다"
-                  }
-                </p>
               </div>
               <div className="flex gap-2">
                 {menuItems.length === 0 ? (

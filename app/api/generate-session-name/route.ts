@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `카페 주문 세션을 위한 재미있고 창의적인 제목을 생성해주세요. 
-            
-            카페 이름: ${shopName || '카페'}
+                  text: `매장 주문 세션을 위한 재미있고 창의적인 제목을 생성해주세요.
+      
+매장 이름: ${shopName || '매장'}
             
             요구사항:
             - 한국어로 작성

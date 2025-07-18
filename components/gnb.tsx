@@ -19,14 +19,14 @@ export function GNB() {
             <NavigationMenuItem>
               <Link href="/shops" legacyBehavior passHref>
                 <NavigationMenuLink className="px-4 py-2 text-white hover:text-blue-100 hover:bg-white/10 rounded-lg transition-all duration-200 font-medium">
-                  카페 목록
+                  매장 목록
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
               <Link href="/register-shop" legacyBehavior passHref>
                 <NavigationMenuLink className="px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-all duration-200 font-medium border border-white/20 hover:border-white/30">
-                  카페 등록
+                  매장 등록
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
