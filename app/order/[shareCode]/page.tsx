@@ -149,6 +149,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                 </div>
               </div>
             )}
+            
             {/* Receipt Popup */}
             <ReceiptPopup 
               mergedMenu={mergedMenu}

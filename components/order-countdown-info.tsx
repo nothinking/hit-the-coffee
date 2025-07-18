@@ -34,15 +34,14 @@ export function OrderCountdownInfo({ createdAt, expiresAt, title, address }: Ord
 
   return (
     <div className="text-center">
-      {title && <div className="text-xl font-semibold mt-2">{title}</div>}
+      {title && <div className="text-2xl font-bold mt-3 mb-2 text-gray-900">{title}</div>}
       {address && <CardDescription className="text-gray-600">{address}</CardDescription>}
-      <div className="mt-2 text-sm text-gray-700">
-        생성시각: {new Date(createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}
+      <div className="mt-4 text-xs text-gray-500 space-y-1">
+        <div>생성시각: {new Date(createdAt).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</div>
         {expiresAt && (
           <>
-            <span className="mx-2">|</span>
-            <span className="text-red-600 font-semibold">만료시각: {new Date(expiresAt!).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</span>
-            {remainingText && <span className="ml-2 font-semibold text-orange-600">{remainingText}</span>}
+            <div>만료시각: {new Date(expiresAt!).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}</div>
+            {remainingText && <div className="text-orange-500 font-medium">{remainingText}</div>}
           </>
         )}
       </div>

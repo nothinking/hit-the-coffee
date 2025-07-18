@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { submitOrderSelections } from "@/app/order/[shareCode]/actions"
+import { X } from "lucide-react"
 
 interface MenuItem {
   id: string
@@ -27,8 +28,9 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
 
   /* UI state */
   const [participantName, setParticipantName] = useState("")
-  const [selected, setSelected] = useState<Record<string, number>>({}) // itemId → qty
+  const [selected, setSelected] = useState<Record<string, boolean>>({}) // itemId → selected
   const [isPending, startTransition] = useTransition() // isPending tracks the transition status
+  const [showMenuPopup, setShowMenuPopup] = useState(false)
   const [showNamePopup, setShowNamePopup] = useState(false)
 
   const orderClosed = orderStatus === "closed"
@@ -37,22 +39,15 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
   const toggleItem = (id: string, checked: boolean) =>
     setSelected((prev) => {
       const next = { ...prev }
-      checked ? (next[id] = 1) : delete next[id]
-      return next
-    })
-
-  const setQty = (id: string, qty: number) =>
-    setSelected((prev) => {
-      const next = { ...prev }
-      qty > 0 ? (next[id] = qty) : delete next[id]
+      checked ? (next[id] = true) : delete next[id]
       return next
     })
 
   /* Submit ---------------------------------------------------------------- */
   function handleOrderButtonClick() {
-    const selections = Object.entries(selected).map(([itemId, quantity]) => ({ itemId, quantity }))
-    if (selections.length === 0) {
-      toast({ title: "No items selected", description: "Choose at least one menu item.", variant: "destructive" })
+    const selectedItems = Object.keys(selected).filter(id => selected[id])
+    if (selectedItems.length === 0) {
+      toast({ title: "메뉴를 선택해주세요", description: "최소 하나의 메뉴를 선택해야 합니다.", variant: "destructive" })
       return
     }
     setShowNamePopup(true)
@@ -60,11 +55,13 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
 
   async function handleSubmitOrder() {
     if (!participantName.trim()) {
-      toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" })
+      toast({ title: "이름을 입력해주세요", description: "이름을 입력해주세요.", variant: "destructive" })
       return
     }
 
-    const selections = Object.entries(selected).map(([itemId, quantity]) => ({ itemId, quantity }))
+    const selections = Object.keys(selected)
+      .filter(id => selected[id])
+      .map(itemId => ({ itemId, quantity: 1 })) // Always quantity 1
     
     console.log("4. Starting transition for submitOrderSelections...")
     startTransition(async () => {
@@ -74,22 +71,23 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
         console.log("6. submitOrderSelections returned:", result);
 
         if (result && result.success) {
-          toast({ title: "Order submitted!", description: result.message });
+          toast({ title: "주문 완료!", description: result.message });
           setSelected({}); // 체크내역 리셋
           setParticipantName(""); // 이름 입력란도 리셋
           setShowNamePopup(false); // 팝업 닫기
+          setShowMenuPopup(false); // 메뉴 팝업도 닫기
         } else {
           toast({
-            title: "Submission failed",
-            description: result?.message ?? "Unknown error",
+            title: "주문 실패",
+            description: result?.message ?? "알 수 없는 오류가 발생했습니다.",
             variant: "destructive",
           });
         }
       } catch (error) {
         console.error("Error in submitOrderSelections:", error);
         toast({
-          title: "Submission failed",
-          description: "An error occurred while submitting your order.",
+          title: "주문 실패",
+          description: "주문 처리 중 오류가 발생했습니다.",
           variant: "destructive",
         });
       }
@@ -112,21 +110,56 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
         </div>
       ) : (
         <>
-          {/* Menu list ---------------------------------------------------- */}
-          <div className="space-y-4">
-            {menuItems.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">☕</div>
-                <p className="text-gray-500 text-lg">메뉴가 준비 중입니다...</p>
+          {/* Order Button */}
+          <div className="text-center">
+            <Button 
+              onClick={() => setShowMenuPopup(true)}
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+              disabled={isPending || menuItems.length === 0}
+            >
+              <div className="flex items-center gap-2">
+                <span>🎯</span>
+                주문하기!
               </div>
-            ) : (
-              <div className="grid gap-4">
-                {menuItems.map((item) => (
+            </Button>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              버튼을 누르면 메뉴를 선택할 수 있어요
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* Menu Selection Popup */}
+      {showMenuPopup && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">메뉴 선택</h3>
+              <Button
+                onClick={() => setShowMenuPopup(false)}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+
+            {/* Menu List */}
+            <div className="space-y-3 mb-6">
+              {menuItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">☕</div>
+                  <p className="text-gray-500">메뉴가 준비 중입니다...</p>
+                </div>
+              ) : (
+                menuItems.map((item) => (
                   <Card key={item.id} className="flex items-center justify-between p-4 hover:shadow-md transition-all duration-200 border-2 hover:border-blue-200">
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id={`item-${item.id}`}
-                        checked={item.id in selected}
+                        checked={selected[item.id] || false}
                         onCheckedChange={(c) => toggleItem(item.id, c as boolean)}
                         disabled={isPending}
                         className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
@@ -138,49 +171,34 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
                         {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="text-right">
                       <span className="font-bold text-lg text-blue-600">{item.price.toFixed(2)}</span>
-                      {item.id in selected && (
-                        <Input
-                          type="number"
-                          min={1}
-                          value={selected[item.id]}
-                          onChange={(e) => setQty(item.id, Number(e.target.value))}
-                          className="w-20 text-center border-2 border-blue-200 focus:border-blue-500"
-                          disabled={isPending}
-                        />
-                      )}
                     </div>
                   </Card>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Submit -------------------------------------------------------- */}
-          <div className="mt-8">
-            <Button 
-              onClick={handleOrderButtonClick}
-              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" 
-              disabled={isPending || menuItems.length === 0}
-            >
-              {isPending ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  주문 처리 중...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span>🎯</span>
-                  주문하기!
-                </div>
+                ))
               )}
-            </Button>
-            <p className="text-center text-sm text-gray-500 mt-2">
-              버튼을 누르면 이름을 입력할 수 있어요
-            </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowMenuPopup(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isPending}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleOrderButtonClick}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                disabled={isPending || Object.keys(selected).filter(id => selected[id]).length === 0}
+              >
+                주문하기
+              </Button>
+            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Name Input Popup */}
