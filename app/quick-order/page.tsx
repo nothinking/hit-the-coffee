@@ -170,11 +170,11 @@ export default function QuickOrderPage() {
     try {
       const formData = new FormData()
       
-      if (capturedImage) {
+      if (capturedImage && textInput.trim() === '') {
         const response = await fetch(capturedImage)
         const blob = await response.blob()
         formData.append('image', blob, 'menu.jpg')
-      } else if (textInput) {
+      } else if (textInput.trim()) {
         formData.append('textInput', textInput)
       }
 
@@ -444,16 +444,24 @@ export default function QuickOrderPage() {
                     <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 텍스트 입력</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      메뉴 정보를 텍스트로 입력해주세요
+                      각 줄에 하나의 메뉴를 입력해주세요. 줄바꿈으로 메뉴를 구분합니다.
                     </p>
+                    <div className="text-xs text-gray-500 mb-2 bg-blue-50 p-2 rounded">
+                      💡 <strong>입력 형식:</strong><br/>
+                      • 메뉴명 - 설명 - 가격원<br/>
+                      • 메뉴명 가격원 (설명 없음)<br/>
+                      • 메뉴명 설명 가격원
+                    </div>
                     <Textarea
                       value={textInput}
                       onChange={(e) => setTextInput(e.target.value)}
-                      placeholder="예시:
+                      placeholder="각 줄에 하나의 메뉴를 입력하세요:
+
 아메리카노 - 진한 커피 - 4500원
 카페라떼 - 우유가 들어간 부드러운 커피 - 5000원
-카푸치노 - 우유 거품이 있는 커피 - 5000원"
-                      rows={8}
+카푸치노 - 우유 거품이 있는 커피 - 5000원
+에스프레소 - 강한 커피 - 3500원"
+                      rows={10}
                       className="w-full"
                     />
                     <div className="flex gap-2 mt-4">
@@ -524,21 +532,23 @@ export default function QuickOrderPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="relative">
-                    <img 
-                      src={capturedImage} 
-                      alt="Captured menu" 
-                      className="w-full rounded-lg"
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="absolute top-2 right-2"
-                      onClick={resetInput}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {capturedImage && (
+                    <div className="relative">
+                      <img 
+                        src={capturedImage} 
+                        alt="Captured menu" 
+                        className="w-full rounded-lg"
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="absolute top-2 right-2"
+                        onClick={resetInput}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
 
                   {!isExtracting && extractedMenus.length === 0 && !extractionError && (
                     <div className="text-center p-6 bg-gray-50 rounded-lg">
