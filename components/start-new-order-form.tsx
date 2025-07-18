@@ -7,6 +7,7 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
   const [title, setTitle] = useState("")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
   const router = useRouter()
   const [expiresInMinutes, setExpiresInMinutes] = useState<string | number>(30);
 
@@ -37,73 +38,105 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
     return funTitles[Math.floor(Math.random() * funTitles.length)]
   }
 
+  const handleSubmit = async () => {
+    setError(null)
+    startTransition(async () => {
+      const minutes = expiresInMinutes === "" ? 30 : Number(expiresInMinutes);
+      const now = new Date();
+      // UTC 기준으로 expires_at 계산
+      const expiresAt = new Date(now.getTime() + minutes * 60 * 1000).toISOString();
+      
+      // 제목이 비어있으면 자동으로 재미있는 제목 생성
+      const finalTitle = title.trim() || generateFunTitle();
+      
+      const res = await fetch("/api/start-new-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shopId, title: finalTitle, expires_at: expiresAt })
+      })
+      const data = await res.json()
+      if (!data.success) setError(data.message)
+      else {
+        if (data.shareCode) {
+          // 세션 페이지로 바로 이동
+          router.push(`/order/${data.shareCode}`);
+        } else {
+          router.refresh()
+        }
+        setTitle("");
+        setExpiresInMinutes(30);
+        setShowModal(false);
+      }
+    })
+  }
 
   return (
-    <form
-      onSubmit={e => {
-        e.preventDefault()
-        setError(null)
-        startTransition(async () => {
-          const minutes = expiresInMinutes === "" ? 30 : Number(expiresInMinutes);
-          const now = new Date();
-          // UTC 기준으로 expires_at 계산
-          const expiresAt = new Date(now.getTime() + minutes * 60 * 1000).toISOString();
-          
-          // 제목이 비어있으면 자동으로 재미있는 제목 생성
-          const finalTitle = title.trim() || generateFunTitle();
-          
-          const res = await fetch("/api/start-new-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ shopId, title: finalTitle, expires_at: expiresAt })
-          })
-          const data = await res.json()
-          if (!data.success) setError(data.message)
-          else {
-            if (data.shareCode) {
-              // 세션 페이지로 바로 이동
-              router.push(`/order/${data.shareCode}`);
-            } else {
-              router.refresh()
-            }
-            setTitle("");
-            setExpiresInMinutes(30);
-          }
-        })
-      }}
-      className="flex flex-col gap-3 w-full"
-    >
-      <div className="flex flex-col gap-2">
-        <input
-          type="text"
-          value={title}
-          onChange={e => setTitle(e.target.value)}
-          placeholder="세션 이름 (비워두면 자동 생성)"
-          className="border-2 border-gray-200 rounded-lg px-3 py-2 flex-1 text-sm focus:border-blue-500 focus:outline-none transition-colors"
-          disabled={isPending}
-        />
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span>⏰ 만료시간: 30분</span>
-        </div>
-      </div>
+    <>
       <Button 
-        type="submit" 
-        disabled={isPending} 
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+        onClick={() => setShowModal(true)}
+        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
       >
-        {isPending ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            세션 생성 중...
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            <span>🎯</span>
-            내가쏜다
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <span>🎯</span>
+          내가쏜다
+        </div>
       </Button>
-      {error && <span className="text-red-500 text-sm text-center">{error}</span>}
-    </form>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">주문 세션 시작</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  세션 이름
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="세션 이름 (비워두면 자동 생성)"
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:outline-none transition-colors"
+                  disabled={isPending}
+                />
+              </div>
+              
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span>⏰ 만료시간: 30분</span>
+              </div>
+
+              {error && <span className="text-red-500 text-sm">{error}</span>}
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <Button
+                onClick={() => setShowModal(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isPending}
+              >
+                취소
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={isPending}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+              >
+                {isPending ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    세션 생성 중...
+                  </div>
+                ) : (
+                  '시작하기'
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 } 

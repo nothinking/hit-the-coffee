@@ -51,7 +51,7 @@ export default async function CoffeeShopListPage() {
                 <CardContent className="pt-0">
                   <div className="space-y-4">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-3">빠른 주문 세션 시작</p>
+              
                     </div>
                     <StartNewOrderForm shopId={shop.id} />
                     <div className="text-center">
