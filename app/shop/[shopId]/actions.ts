@@ -16,6 +16,7 @@ function generateShareCode(length = 6): string {
 export async function addMenuItem(shopId: string, formData: FormData) {
   const supabase = await createSupabaseServer()
   const name = formData.get("name") as string
+  const description = formData.get("description") as string
   const price = formData.get("price") as string
 
   if (!name || !price) {
@@ -25,6 +26,7 @@ export async function addMenuItem(shopId: string, formData: FormData) {
   const { error } = await supabase.from("menu_items").insert({
     coffee_shop_id: shopId,
     name,
+    description,
     price: price || "0",
   })
 
@@ -41,9 +43,10 @@ export async function updateMenuItem(shopId: string, itemId: string, formData: F
   console.log('updateMenuItem called with:', { shopId, itemId })
   const supabase = await createSupabaseServer()
   const name = formData.get("name") as string
+  const description = formData.get("description") as string
   const price = formData.get("price") as string
 
-  console.log('Form data:', { name, price })
+  console.log('Form data:', { name, description, price })
 
   if (!name || !price) {
     return { success: false, message: "Name and Price are required." }
@@ -54,6 +57,7 @@ export async function updateMenuItem(shopId: string, itemId: string, formData: F
     .from("menu_items")
     .update({
       name,
+      description,
       price: price || "0",
     })
     .eq("id", itemId)
@@ -102,12 +106,13 @@ export async function resetAllMenus(shopId: string) {
   return { success: true, message: "All menus have been reset successfully!" }
 }
 
-export async function addMultipleMenus(shopId: string, menus: Array<{name: string, price: string}>) {
+export async function addMultipleMenus(shopId: string, menus: Array<{name: string, description: string, price: string}>) {
   const supabase = await createSupabaseServer()
 
   const menuData = menus.map(menu => ({
     coffee_shop_id: shopId,
     name: menu.name,
+    description: menu.description,
     price: menu.price || "0",
   }))
 

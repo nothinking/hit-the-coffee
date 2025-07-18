@@ -37,6 +37,7 @@ import {
 interface MenuItem {
   id?: string
   name: string
+  description: string
   price: string
 }
 
@@ -59,7 +60,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   // Menu management states
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingItem, setEditingItem] = useState<any>(null)
-  const [newMenuItem, setNewMenuItem] = useState<MenuItem>({ name: '', price: '' })
+  const [newMenuItem, setNewMenuItem] = useState<MenuItem>({ name: '', description: '', price: '' })
   
   // Image upload states
   const [showImageUpload, setShowImageUpload] = useState(false)
@@ -221,6 +222,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                          // Convert to the format expected by addMultipleMenus
              const menuData = menus.map((menu: any) => ({
                name: menu.name,
+               description: menu.description || '',
                price: menu.price || "0"
              }))
             
@@ -270,6 +272,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
 
     const formData = new FormData()
     formData.append('name', newMenuItem.name)
+    formData.append('description', newMenuItem.description)
     formData.append('price', newMenuItem.price)
 
     const result = await addMenuItem(shopId, formData)
@@ -278,7 +281,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
         title: "성공",
         description: result.message
       })
-      setNewMenuItem({ name: '', price: '' })
+      setNewMenuItem({ name: '', description: '', price: '' })
       setShowAddForm(false)
       loadShopData()
     } else {
@@ -303,6 +306,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
 
     const formData = new FormData()
     formData.append('name', editingItem.name)
+    formData.append('description', editingItem.description || '')
     formData.append('price', editingItem.price)
 
     console.log('Updating menu item:', editingItem.id, editingItem.name, editingItem.price)
@@ -571,7 +575,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                     size="sm"
                     onClick={() => {
                       setShowAddForm(false)
-                      setNewMenuItem({ name: '', price: '' })
+                      setNewMenuItem({ name: '', description: '', price: '' })
                     }}
                   >
                     <X className="w-4 h-4" />
@@ -586,6 +590,17 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                       onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
                       placeholder="예: 아메리카노"
                       required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="description">설명</Label>
+                    <Textarea
+                      id="description"
+                      value={newMenuItem.description}
+                      onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
+                      placeholder="메뉴에 대한 설명을 입력하세요"
+                      rows={3}
                     />
                   </div>
 
@@ -610,7 +625,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                       className="flex-1"
                       onClick={() => {
                         setShowAddForm(false)
-                        setNewMenuItem({ name: '', price: '' })
+                        setNewMenuItem({ name: '', description: '', price: '' })
                       }}
                     >
                       취소
@@ -648,6 +663,15 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                               required
                             />
                           </div>
+                          
+                          <div>
+                            <Label>설명</Label>
+                            <Textarea
+                              value={editingItem?.description || ''}
+                              onChange={(e) => setEditingItem({...editingItem, description: e.target.value})}
+                              rows={2}
+                            />
+                          </div>
 
                           <div>
                             <Label>가격 (원) *</Label>
@@ -677,10 +701,12 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <h4 className="font-semibold text-lg">{item.name}</h4>
-
-                                                         <p className="text-blue-600 font-semibold mt-2">
-                               {item.price}
-                             </p>
+                            {item.description && (
+                              <p className="text-gray-600 text-sm mt-1">{item.description}</p>
+                            )}
+                            <p className="text-blue-600 font-semibold mt-2">
+                              {item.price}
+                            </p>
                           </div>
                           <div className="flex gap-2">
                             <Button

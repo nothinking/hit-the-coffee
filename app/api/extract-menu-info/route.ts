@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-  const prompt = `이 이미지는 카페의 메뉴판입니다.\n각 메뉴의 이름(name), 가격(price)을 반드시 포함하여 JSON 배열로 추출해줘.\n모든 메뉴 항목에 두 필드가 빠짐없이 들어가야 하며, 가격이 없으면 0으로 채워줘.\n예시:\n[\n  {\"name\": \"아메리카노\", \"price\": \"2000\"},\n  {\"name\": \"카페라떼\", \"price\": \"2500\"},\n  {\"name\": \"에스프레소\", \"price\": \"1800\"}\n]\nJSON 코드블록으로 감싸지 말고, 배열만 반환해줘.`;
+  const prompt = `이 이미지는 카페의 메뉴판입니다.\n각 메뉴의 이름(name), 설명(description), 가격(price)을 반드시 포함하여 JSON 배열로 추출해줘.\n모든 메뉴 항목에 세 필드가 빠짐없이 들어가야 하며, 설명이나 가격이 없으면 빈 문자열(\"\") 또는 0으로 채워줘.\n예시:\n[\n  {\"name\": \"아메리카노\", \"description\": \"진한 커피\", \"price\": \"2000\"},\n  {\"name\": \"카페라떼\", \"description\": \"우유가 들어간 부드러운 커피\", \"price\": \"2500\"},\n  {\"name\": \"에스프레소\", \"description\": \"\", \"price\": \"1800\"}\n]\nJSON 코드블록으로 감싸지 말고, 배열만 반환해줘.`;
 
   const body = {
     contents: [

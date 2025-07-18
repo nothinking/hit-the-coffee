@@ -9,14 +9,13 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const [expiresInMinutes, setExpiresInMinutes] = useState<string | number>(30);
-  const [orderLink, setOrderLink] = useState<string | null>(null);
+
 
   return (
     <form
       onSubmit={e => {
         e.preventDefault()
         setError(null)
-        setOrderLink(null)
         startTransition(async () => {
           const minutes = expiresInMinutes === "" ? 30 : Number(expiresInMinutes);
           const now = new Date();
@@ -30,10 +29,11 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
           const data = await res.json()
           if (!data.success) setError(data.message)
           else {
-            router.refresh()
             if (data.shareCode) {
-              const link = `${window.location.origin}/order/${data.shareCode}`;
-              setOrderLink(link);
+              // 세션 페이지로 바로 이동
+              router.push(`/order/${data.shareCode}`);
+            } else {
+              router.refresh()
             }
             setTitle("");
             setExpiresInMinutes(30);
@@ -47,7 +47,7 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="Order title"
+                        placeholder="왜 쏘나요?"
           className="border rounded px-2 py-1 flex-1 min-w-0"
           required
           disabled={isPending}
@@ -70,15 +70,6 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
         <Button type="submit" disabled={isPending} className="whitespace-nowrap">빵야빵야</Button>
       </div>
       {error && <span className="text-red-500 ml-2">{error}</span>}
-      {orderLink && (
-        <div className="mt-2 flex flex-col items-start gap-2 w-full">
-          <span className="text-sm font-semibold text-blue-700">주문 링크:</span>
-          <div className="flex items-center gap-2 w-full">
-            <input type="text" value={orderLink} readOnly className="border rounded px-2 py-1 flex-1 min-w-0 bg-gray-50" />
-            <Button type="button" size="sm" onClick={() => {navigator.clipboard.writeText(orderLink)}}>복사</Button>
-          </div>
-        </div>
-      )}
     </form>
   )
 } 

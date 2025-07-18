@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 interface MenuItem {
   name: string;
+  description: string;
   price: number;
 }
 
@@ -25,7 +26,7 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
   const [loading, setLoading] = useState(false)
   const [loadingImage, setLoadingImage] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null)
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([{ name: "", price: 0 }]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([{ name: "", description: "", price: 0 }]);
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] || null;
@@ -51,7 +52,7 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
               if (Array.isArray(arr) && arr.length > 0) {
                 setMenuItems(arr.map((item: any) => ({
                   name: item.name || "",
-          
+                  description: item.description || "",
                   price: Number(item.price) || 0
                 })));
               }
@@ -71,7 +72,7 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
   }
 
   function handleAddMenuItem() {
-    setMenuItems(items => [...items, { name: "", price: 0 }]);
+    setMenuItems(items => [...items, { name: "", description: "", price: 0 }]);
   }
 
   function handleRemoveMenuItem(idx: number) {
@@ -96,7 +97,7 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
       const data = await res.json();
       if (data.success) {
         toast({ title: "Success", description: "메뉴가 등록되었습니다." });
-        setMenuItems([{ name: "", price: 0 }]);
+        setMenuItems([{ name: "", description: "", price: 0 }]);
         setImageFile(null);
         formRef.current?.reset();
         router.refresh();
@@ -138,7 +139,7 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
       </div>
       {menuItems.map((item, idx) => (
         <div key={idx} className="border p-4 rounded-md space-y-2 relative">
-          <div className="space-y-1">
+                    <div className="space-y-1">
             <Label>Item Name</Label>
             <Input
               required
@@ -147,8 +148,17 @@ export function MenuItemForm({ shopId }: MenuItemFormProps) {
               onChange={e => handleMenuItemChange(idx, "name", e.target.value)}
             />
           </div>
-
           <div className="space-y-1">
+            <Label>Description (optional)</Label>
+            <Textarea
+              disabled={loading}
+              value={item.description}
+              onChange={e => handleMenuItemChange(idx, "description", e.target.value)}
+              placeholder="메뉴 설명을 입력하세요"
+            />
+          </div>
+ 
+            <div className="space-y-1">
             <Label>Price</Label>
             <Input
               type="number"
