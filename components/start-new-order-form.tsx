@@ -115,7 +115,7 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
       >
         <div className="flex items-center gap-2">
           <span>🎯</span>
-          내가쏜다
+          주문취합 링크 생성
         </div>
       </Button>
 
