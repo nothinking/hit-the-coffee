@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import { Camera, Upload, X, Edit3, Loader2, Mic, MicOff } from "lucide-react"
+import { Camera, Upload, X, Edit3, Loader2, Mic, MicOff, ArrowLeft } from "lucide-react"
 import { createPortal } from "react-dom"
 
 // Web Speech API 타입 정의
@@ -163,26 +163,75 @@ export default function RegisterShopPage() {
   // Camera functions
   async function startCamera() {
     try {
-      // 모바일에서는 후면 카메라를 우선적으로 사용
+      // 먼저 카메라 권한 확인
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("이 브라우저는 카메라를 지원하지 않습니다.")
+      }
+
+      // 카메라 설정 - 더 유연한 설정으로 변경
       const constraints = {
         video: {
-          facingMode: 'environment',
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: { ideal: 'environment' }, // 후면 카메라 우선
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 }
         }
       }
       
+      // 카메라 스트림 요청
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      console.log("카메라 스트림 획득:", stream.getTracks().map(track => track.kind))
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         streamRef.current = stream
+        
+        // 스트림이 활성 상태인지 확인
+        const videoTrack = stream.getVideoTracks()[0]
+        if (videoTrack) {
+          console.log("비디오 트랙 설정:", videoTrack.getSettings())
+          console.log("비디오 트랙 상태:", videoTrack.readyState)
+        }
+        
+        // 비디오 로드 완료 대기
+        videoRef.current.onloadedmetadata = () => {
+          console.log("카메라가 성공적으로 시작되었습니다.")
+        }
+        
+        videoRef.current.onerror = (error) => {
+          console.error("비디오 로드 오류:", error)
+          toast({
+            title: "카메라 오류",
+            description: "카메라 스트림을 로드할 수 없습니다.",
+            variant: "destructive"
+          })
+        }
       }
+      
       setShowCamera(true)
-    } catch (err) {
-      console.error("Camera error:", err)
+      
       toast({
-        title: "Camera Error",
-        description: "카메라에 접근할 수 없습니다. 브라우저 설정을 확인해주세요.",
+        title: "카메라 시작",
+        description: "카메라가 성공적으로 시작되었습니다."
+      })
+      
+    } catch (err: any) {
+      console.error("Camera error:", err)
+      
+      let errorMessage = "카메라에 접근할 수 없습니다."
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage = "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요."
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = "카메라를 찾을 수 없습니다. 카메라가 연결되어 있는지 확인해주세요."
+      } else if (err.name === 'NotReadableError') {
+        errorMessage = "카메라가 다른 앱에서 사용 중입니다. 다른 앱을 종료하고 다시 시도해주세요."
+      } else if (err.name === 'OverconstrainedError') {
+        errorMessage = "지원되지 않는 카메라 설정입니다. 다른 카메라를 시도해보세요."
+      }
+      
+      toast({
+        title: "카메라 오류",
+        description: errorMessage,
         variant: "destructive"
       })
     }
@@ -456,6 +505,19 @@ export default function RegisterShopPage() {
                     >
                       <Upload className="w-4 h-4 mr-2" />
                       파일 선택
+                    </Button>
+                  </div>
+                  <div className="flex justify-center mt-4">
+                    <Button 
+                      onClick={() => {
+                        setInputMethod(null)
+                        setCapturedImage(null)
+                      }} 
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      다른 방법 선택
                     </Button>
                   </div>
                 </div>
