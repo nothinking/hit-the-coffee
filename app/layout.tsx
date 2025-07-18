@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { GNB } from "@/components/gnb"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <body>
         <GNB />
         {children}
+        <Toaster />
       </body>
     </html>
   )
