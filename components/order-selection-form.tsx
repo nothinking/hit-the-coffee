@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useActionState, useTransition, type FormEvent, useRef } from "react"
+import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,21 +24,12 @@ interface OrderSelectionFormProps {
 
 export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSelectionFormProps) {
   const { toast } = useToast()
-  const formRef = useRef<HTMLFormElement>(null)
 
   /* UI state */
   const [participantName, setParticipantName] = useState("")
   const [selected, setSelected] = useState<Record<string, number>>({}) // itemId → qty
-  // Add wrapper to match useActionState signature
-  const actionWrapper = async (_prevState: unknown, { orderId, participantName, selections }: { orderId: string, participantName: string, selections: { itemId: string, quantity: number }[] }) => {
-    return await submitOrderSelections(_prevState, orderId, participantName, selections)
-  }
-  // Explicitly type serverState to match the return type
-  const [serverState, formAction] = useActionState<
-    { success: boolean; message: string } | null,
-    { orderId: string; participantName: string; selections: { itemId: string; quantity: number }[] }
-  >(actionWrapper, null)
   const [isPending, startTransition] = useTransition() // isPending tracks the transition status
+  const [showNamePopup, setShowNamePopup] = useState(false)
 
   const orderClosed = orderStatus === "closed"
 
@@ -58,57 +49,58 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
     })
 
   /* Submit ---------------------------------------------------------------- */
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    console.log("1. handleSubmit called.")
-    e.preventDefault() // Prevent default form submission (page refresh)
-
-    if (!participantName.trim()) {
-      console.log("2. Validation failed: Name required.")
-      toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" })
-      return
-    }
+  function handleOrderButtonClick() {
     const selections = Object.entries(selected).map(([itemId, quantity]) => ({ itemId, quantity }))
     if (selections.length === 0) {
-      console.log("3. Validation failed: No items selected.")
       toast({ title: "No items selected", description: "Choose at least one menu item.", variant: "destructive" })
       return
     }
+    setShowNamePopup(true)
+  }
 
-    console.log("4. Starting transition for formAction...")
+  async function handleSubmitOrder() {
+    if (!participantName.trim()) {
+      toast({ title: "Name required", description: "Please enter your name.", variant: "destructive" })
+      return
+    }
+
+    const selections = Object.entries(selected).map(([itemId, quantity]) => ({ itemId, quantity }))
+    
+    console.log("4. Starting transition for submitOrderSelections...")
     startTransition(async () => {
-      console.log("5. Inside startTransition. Calling formAction...");
-      const result = await formAction({ orderId, participantName: participantName.trim(), selections }) as unknown as { success: boolean; message: string } | null;
-      console.log("6. formAction returned:", result);
+      console.log("5. Inside startTransition. Calling submitOrderSelections...");
+      try {
+        const result = await submitOrderSelections(null, orderId, participantName.trim(), selections);
+        console.log("6. submitOrderSelections returned:", result);
 
-      if (result && typeof result === "object" && "success" in result) {
-        if (result.success) {
+        if (result && result.success) {
           toast({ title: "Order submitted!", description: result.message });
           setSelected({}); // 체크내역 리셋
           setParticipantName(""); // 이름 입력란도 리셋
-          formRef.current?.reset(); // 폼 전체 강제 리셋
+          setShowNamePopup(false); // 팝업 닫기
         } else {
           toast({
             title: "Submission failed",
-            description: result.message ?? "Unknown error",
+            description: result?.message ?? "Unknown error",
             variant: "destructive",
           });
         }
-      } else {
+      } catch (error) {
+        console.error("Error in submitOrderSelections:", error);
         toast({
           title: "Submission failed",
-          description: "Unknown error",
+          description: "An error occurred while submitting your order.",
           variant: "destructive",
         });
       }
       console.log("7. Finished inside startTransition.");
-      // Do not return result here; startTransition expects void
     });
     console.log("8. handleSubmit finished (outside startTransition).")
   }
 
   /* ---------------------------------------------------------------------- */
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+    <div className="space-y-6">
       {orderClosed ? (
         <div className="flex flex-col items-center justify-center py-8">
           <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -120,19 +112,6 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
         </div>
       ) : (
         <>
-          {/* Name ---------------------------------------------------------- */}
-          <div className="space-y-2">
-            <Label htmlFor="participant-name">Your Name</Label>
-            <Input
-              id="participant-name"
-              value={participantName}
-              onChange={(e) => setParticipantName(e.target.value)}
-              placeholder="e.g. Jane"
-              required
-              disabled={isPending}
-            />
-          </div>
-
           {/* Menu list ---------------------------------------------------- */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Select Your Items</h3>
@@ -176,11 +155,63 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
           </div>
 
           {/* Submit -------------------------------------------------------- */}
-          <Button type="submit" className="w-full" disabled={isPending || menuItems.length === 0}>
+          <Button 
+            onClick={handleOrderButtonClick}
+            className="w-full" 
+            disabled={isPending || menuItems.length === 0}
+          >
             {isPending ? "Submitting…" : "Submit My Order"}
           </Button>
         </>
       )}
-    </form>
+
+      {/* Name Input Popup */}
+      {showNamePopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Enter Your Name</h3>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="popup-participant-name">Your Name</Label>
+                <Input
+                  id="popup-participant-name"
+                  value={participantName}
+                  onChange={(e) => setParticipantName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      handleSubmitOrder()
+                    }
+                  }}
+                  placeholder="e.g. Jane"
+                  autoFocus
+                  disabled={isPending}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSubmitOrder}
+                  className="flex-1"
+                  disabled={isPending}
+                >
+                  {isPending ? "Submitting…" : "Submit Order"}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowNamePopup(false)
+                    setParticipantName("")
+                  }}
+                  variant="outline"
+                  className="flex-1"
+                  disabled={isPending}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
