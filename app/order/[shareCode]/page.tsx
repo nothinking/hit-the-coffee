@@ -128,20 +128,20 @@ export default async function OrderPage({ params }: OrderPageProps) {
           <div className="mt-8">
             {/* 개별 주문리스트(참여자, 메뉴, 수량, 금액, 삭제) - 아래로 이동 */}
             {orderSelections && orderSelections.length > 0 && (
-              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg p-6 max-w-2xl mx-auto">
+              <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg p-4 sm:p-6 max-w-2xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">📋</span>
+                <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs sm:text-sm font-bold">📋</span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">주문 현황</h3>
-                    <p className="text-sm text-gray-600">현재까지 주문된 메뉴들입니다</p>
+                    <h3 className="text-base sm:text-lg font-bold text-gray-900">주문 현황</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">현재까지 주문된 메뉴들입니다</p>
                   </div>
                 </div>
 
                 {/* Table Header */}
-                <div className="grid grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
+                <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
                   <span className="text-sm">참여자</span>
                   <span className="text-sm">메뉴</span>
                   <span className="text-sm text-center">수량</span>
@@ -157,24 +157,49 @@ export default async function OrderPage({ params }: OrderPageProps) {
                     const menuPrice = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
                     
                     return (
-                      <div key={sel.id} className="grid grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 items-center py-3 px-4 rounded-xl bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">{sel.participant_name.charAt(0)}</span>
+                      <div key={sel.id}>
+                        {/* Desktop View */}
+                        <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 items-center py-3 px-4 rounded-xl bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">{sel.participant_name.charAt(0)}</span>
+                            </div>
+                            <span className="font-medium text-gray-900 truncate">{sel.participant_name}</span>
                           </div>
-                          <span className="font-medium text-gray-900 truncate">{sel.participant_name}</span>
-                        </div>
-                        <span className="font-medium text-gray-800 truncate">{menuName}</span>
-                        <span className="text-center">
-                          <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
-                            {sel.quantity}
+                          <span className="font-medium text-gray-800 truncate">{menuName}</span>
+                          <span className="text-center">
+                            <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                              {sel.quantity}
+                            </span>
                           </span>
-                        </span>
-                        <span className="text-right font-semibold text-blue-600">
-                          {menuPrice.toFixed(2)}
-                        </span>
-                        <div className="flex justify-center">
-                          <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+                          <span className="text-right font-semibold text-blue-600">
+                            {menuPrice.toFixed(2)}
+                          </span>
+                          <div className="flex justify-center">
+                            <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+                          </div>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className="md:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">{sel.participant_name.charAt(0)}</span>
+                              </div>
+                              <div>
+                                <div className="font-medium text-gray-900">{sel.participant_name}</div>
+                                <div className="text-sm text-gray-600">{menuName}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-blue-600 text-lg">{menuPrice.toFixed(2)}</div>
+                              <div className="text-sm text-gray-500">수량: {sel.quantity}</div>
+                            </div>
+                          </div>
+                          <div className="flex justify-end pt-2 border-t border-gray-100">
+                            <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
+                          </div>
                         </div>
                       </div>
                     );
@@ -183,7 +208,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
                 {/* Summary */}
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-gray-600">총 주문 수량:</span>
                       <span className="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-sm font-bold">
