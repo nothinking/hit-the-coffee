@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper";
 import OrderSelectionDeleteButton from "@/components/OrderSelectionDeleteButton";
 import { ReceiptPopup } from "@/components/receipt-popup";
+import { ShareSessionButton } from "@/components/share-session-button";
 
 interface OrderPageProps {
   params: {
@@ -97,6 +98,15 @@ export default async function OrderPage({ params }: OrderPageProps) {
               title={order.title}
               address={coffeeShop.address}
             />
+            
+            {/* Share Session Button */}
+            <div className="mt-6">
+              <ShareSessionButton 
+                shareCode={shareCode}
+                orderTitle={order.title}
+                shopName={coffeeShop.name}
+              />
+            </div>
           </div>
 
           {/* Main Content Card */}
