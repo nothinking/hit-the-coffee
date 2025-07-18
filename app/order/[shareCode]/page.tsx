@@ -4,6 +4,7 @@ import { OrderSelectionForm } from "@/components/order-selection-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper";
 import OrderSelectionDeleteButton from "@/components/OrderSelectionDeleteButton";
+import { ReceiptPopup } from "@/components/receipt-popup";
 
 interface OrderPageProps {
   params: {
@@ -138,75 +139,12 @@ export default async function OrderPage({ params }: OrderPageProps) {
                 </div>
               </div>
             )}
-            {/* 영수증 박스 */}
-            <div className="bg-white border rounded-lg shadow font-mono max-w-md mx-auto p-6 text-sm mb-6 mt-8">
-              <div className="text-center text-lg font-bold mb-2 tracking-widest">RECEIPT</div>
-              <div className="grid grid-cols-[1fr_40px_70px] gap-x-2 mb-2">
-                <span>메뉴</span>
-                <span>수량</span>
-                <span>금액</span>
-              </div>
-              <hr className="mb-2" />
-              {mergedMenu.length > 0 ? (
-                <>
-                  {mergedMenu.map((item, idx) => (
-                    <div key={item.name + item.price} className="grid grid-cols-[1fr_40px_70px] gap-x-2 py-1 items-center">
-                      <span className="truncate text-left">{item.name}</span>
-                      <span className="text-center">{item.quantity}</span>
-                      <span className="text-right">{(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
-                  <hr className="my-2" />
-                  <div className="flex justify-between font-bold text-base">
-                    <span>TOTAL</span>
-                    <span>
-                      {mergedMenu.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-end text-sm mt-1 text-gray-600">
-                    총 수량: {mergedMenu.reduce((sum, item) => sum + item.quantity, 0)}
-                  </div>
-                  <div className="flex flex-col items-center mt-4">
-                    <svg width="180" height="40" viewBox="0 0 180 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="0" y="0" width="180" height="40" fill="#fff" />
-                      <rect x="10" y="10" width="2" height="20" fill="#222" />
-                      <rect x="16" y="10" width="1" height="20" fill="#222" />
-                      <rect x="20" y="10" width="3" height="20" fill="#222" />
-                      <rect x="26" y="10" width="2" height="20" fill="#222" />
-                      <rect x="32" y="10" width="1" height="20" fill="#222" />
-                      <rect x="36" y="10" width="2" height="20" fill="#222" />
-                      <rect x="42" y="10" width="3" height="20" fill="#222" />
-                      <rect x="48" y="10" width="1" height="20" fill="#222" />
-                      <rect x="52" y="10" width="2" height="20" fill="#222" />
-                      <rect x="58" y="10" width="3" height="20" fill="#222" />
-                      <rect x="64" y="10" width="1" height="20" fill="#222" />
-                      <rect x="68" y="10" width="2" height="20" fill="#222" />
-                      <rect x="74" y="10" width="3" height="20" fill="#222" />
-                      <rect x="80" y="10" width="1" height="20" fill="#222" />
-                      <rect x="84" y="10" width="2" height="20" fill="#222" />
-                      <rect x="90" y="10" width="3" height="20" fill="#222" />
-                      <rect x="96" y="10" width="1" height="20" fill="#222" />
-                      <rect x="100" y="10" width="2" height="20" fill="#222" />
-                      <rect x="106" y="10" width="3" height="20" fill="#222" />
-                      <rect x="112" y="10" width="1" height="20" fill="#222" />
-                      <rect x="116" y="10" width="2" height="20" fill="#222" />
-                      <rect x="122" y="10" width="3" height="20" fill="#222" />
-                      <rect x="128" y="10" width="1" height="20" fill="#222" />
-                      <rect x="132" y="10" width="2" height="20" fill="#222" />
-                      <rect x="138" y="10" width="3" height="20" fill="#222" />
-                      <rect x="144" y="10" width="1" height="20" fill="#222" />
-                      <rect x="148" y="10" width="2" height="20" fill="#222" />
-                      <rect x="154" y="10" width="3" height="20" fill="#222" />
-                      <rect x="160" y="10" width="1" height="20" fill="#222" />
-                      <rect x="164" y="10" width="2" height="20" fill="#222" />
-                    </svg>
-                    <div className="mt-2 text-base font-bold tracking-widest">THANK YOU</div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-gray-500 text-center py-8">No orders submitted yet.</div>
-              )}
-            </div>
+            {/* Receipt Popup */}
+            <ReceiptPopup 
+              mergedMenu={mergedMenu}
+              coffeeShopName={coffeeShop.name}
+              orderTitle={order.title}
+            />
           </div>
         </CardContent>
       </Card>

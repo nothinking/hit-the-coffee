@@ -114,10 +114,6 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
         <>
           {/* Menu list ---------------------------------------------------- */}
           <div className="space-y-4">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">메뉴를 골라보세요! 🍽️</h3>
-              <p className="text-gray-600">원하는 메뉴를 체크하고 수량을 선택하세요</p>
-            </div>
             {menuItems.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">☕</div>
