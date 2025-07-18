@@ -605,7 +605,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                   <div className="text-center flex-1">
                     <h3 className="text-lg font-semibold mb-2">메뉴 입력 방법 선택</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      카메라 촬영, 텍스트 입력, 음성 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
+                      카메라 촬영, 텍스트 입력, 또는 음성 입력으로 메뉴를 입력할 수 있습니다
                     </p>
                   </div>
                   <Button
@@ -627,7 +627,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                 </div>
 
                 {!inputMethod ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <Button 
                       onClick={() => setInputMethod('camera')} 
                       className="flex-1"
@@ -656,15 +656,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                         음성 입력
                       </Button>
                     )}
-                    <Button 
-                      onClick={() => document.getElementById('image-file-input')?.click()} 
-                      className="flex-1"
-                      variant="outline"
-                      size="lg"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      이미지 업로드
-                    </Button>
+
                   </div>
                 ) : inputMethod === 'camera' && !capturedImage ? (
                   <div className="space-y-4">
@@ -913,23 +905,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                   }}
                 />
                 
-                <input
-                  id="image-file-input"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (e) => {
-                        setCapturedImage(e.target?.result as string)
-                        setInputMethod('camera')
-                      }
-                      reader.readAsDataURL(file)
-                    }
-                  }}
-                />
+
               </div>
             )}
 
