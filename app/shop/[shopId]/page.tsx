@@ -399,10 +399,10 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
 
   async function handleAddMenuItem(e: React.FormEvent) {
     e.preventDefault()
-    if (!newMenuItem.name || !newMenuItem.price) {
+    if (!newMenuItem.name) {
       toast({
         title: "입력 오류",
-        description: "메뉴 이름과 가격을 입력해주세요.",
+        description: "메뉴 이름을 입력해주세요.",
         variant: "destructive"
       })
       return
@@ -433,10 +433,10 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
 
   async function handleUpdateMenuItem(e: React.FormEvent) {
     e.preventDefault()
-    if (!editingItem || !editingItem.name || !editingItem.price || !editingItem.id) {
+    if (!editingItem || !editingItem.name || !editingItem.id) {
       toast({
         title: "입력 오류",
-        description: "메뉴 이름과 가격을 입력해주세요.",
+        description: "메뉴 이름을 입력해주세요.",
         variant: "destructive"
       })
       return
@@ -575,15 +575,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
               <div>
               </div>
               <div className="flex gap-2">
-                {menuItems.length === 0 ? (
-                  <Button 
-                    onClick={() => setShowImageUpload(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Camera className="w-4 h-4 mr-2" />
-                    이미지로 메뉴 추가
-                  </Button>
-                ) : (
+                {menuItems.length > 0 && (
                   <>
                     <Button 
                       onClick={() => setShowAddForm(true)}
@@ -609,11 +601,29 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             {/* Menu Input Section */}
             {showImageUpload && (
               <div className="space-y-4 p-6 bg-gray-50 rounded-lg">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold mb-2">메뉴 입력 방법 선택</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    카메라 촬영, 텍스트 입력, 음성 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
-                  </p>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-center flex-1">
+                    <h3 className="text-lg font-semibold mb-2">메뉴 입력 방법 선택</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      카메라 촬영, 텍스트 입력, 음성 입력, 또는 파일 업로드로 메뉴를 입력할 수 있습니다
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowImageUpload(false)
+                      setInputMethod(null)
+                      setCapturedImage(null)
+                      setTextInput("")
+                      setTextInputCompleted(false)
+                      setVoiceText("")
+                      resetVoiceInput()
+                    }}
+                    className="ml-4"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
 
                 {!inputMethod ? (
@@ -962,16 +972,15 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                     />
                   </div>
 
-                                     <div>
-                     <Label htmlFor="price">가격 (원) *</Label>
-                     <Input
-                       id="price"
-                       value={newMenuItem.price}
-                       onChange={(e) => setNewMenuItem({...newMenuItem, price: e.target.value})}
-                       placeholder="가격을 입력하세요"
-                       required
-                     />
-                   </div>
+                                                       <div>
+                    <Label htmlFor="price">가격 (원)</Label>
+                    <Input
+                      id="price"
+                      value={newMenuItem.price}
+                      onChange={(e) => setNewMenuItem({...newMenuItem, price: e.target.value})}
+                      placeholder="가격을 입력하세요"
+                    />
+                  </div>
                   <div className="flex gap-2">
                     <Button type="submit" className="flex-1">
                       <Save className="w-4 h-4 mr-2" />
@@ -1032,12 +1041,11 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                           </div>
 
                           <div>
-                            <Label>가격 (원) *</Label>
+                            <Label>가격 (원)</Label>
                             <Input
                               value={editingItem?.price || ''}
                               onChange={(e) => setEditingItem({...editingItem, price: e.target.value})}
                               placeholder="가격을 입력하세요"
-                              required
                             />
                           </div>
                           <div className="flex gap-2">
@@ -1102,7 +1110,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                     className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Camera className="w-4 h-4 mr-2" />
-                    이미지로 추가
+                    스마트 추가
                   </Button>
                   <Button 
                     onClick={() => setShowAddForm(true)}

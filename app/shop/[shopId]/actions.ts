@@ -19,8 +19,8 @@ export async function addMenuItem(shopId: string, formData: FormData) {
   const description = formData.get("description") as string
   const price = formData.get("price") as string
 
-  if (!name || !price) {
-    return { success: false, message: "Name and Price are required." }
+  if (!name) {
+    return { success: false, message: "Name is required." }
   }
 
   const { error } = await supabase.from("menu_items").insert({
@@ -48,8 +48,8 @@ export async function updateMenuItem(shopId: string, itemId: string, formData: F
 
   console.log('Form data:', { name, description, price })
 
-  if (!name || !price) {
-    return { success: false, message: "Name and Price are required." }
+  if (!name) {
+    return { success: false, message: "Name is required." }
   }
 
   console.log('Attempting to update menu item with ID:', itemId)
