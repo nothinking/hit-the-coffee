@@ -54,7 +54,7 @@ export default async function CoffeeShopListPage() {
                     <div className="text-center">
               
                     </div>
-                    <StartNewOrderForm shopId={shop.id} />
+                    <StartNewOrderForm shopId={shop.id} shopName={shop.name} />
                     <div className="text-center">
                       <Link 
                         href={`/shop/${shop.id}`}

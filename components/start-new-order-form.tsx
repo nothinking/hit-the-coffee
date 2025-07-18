@@ -3,39 +3,45 @@ import { useTransition, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-export function StartNewOrderForm({ shopId }: { shopId: string }) {
+export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopName?: string }) {
   const [title, setTitle] = useState("")
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [isGeneratingTitle, setIsGeneratingTitle] = useState(false)
   const router = useRouter()
   const [expiresInMinutes, setExpiresInMinutes] = useState<string | number>(30);
 
-  // 재미있는 세션 이름 자동 생성 함수
-  function generateFunTitle(): string {
-    const funTitles = [
-      "기분이 좋아서",
-      "날씨가 좋아서",
-      "커피가 땡겨서",
-      "친구들과 함께",
-      "혼자 여유롭게",
-      "새로운 메뉴 시도",
-      "오늘은 특별히",
-      "스트레스 해소",
-      "기념일이어서",
-      "그냥 땡겨서",
-      "커피 한 잔의 여유",
-      "오후의 힐링",
-      "아침의 활력",
-      "저녁의 휴식",
-      "주말의 특별함",
-      "평일의 작은 선물",
-      "커피 향에 취해서",
-      "카페 분위기가 좋아서",
-      "새로운 카페 탐방",
-      "익숙한 맛이 그리워서"
-    ]
-    return funTitles[Math.floor(Math.random() * funTitles.length)]
+  // Gemini API를 사용한 세션 이름 자동 생성 함수
+  async function generateFunTitle(): Promise<string> {
+    try {
+      const response = await fetch('/api/generate-session-name', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopName })
+      })
+      
+      const data = await response.json()
+      if (data.success) {
+        return data.title
+      } else {
+        throw new Error('Failed to generate title')
+      }
+    } catch (error) {
+      console.error('Title generation error:', error)
+      // 폴백: 기본 제목들
+      const fallbackTitles = [
+        "기분이 좋아서 😊",
+        "커피가 땡겨서 ☕", 
+        "친구들과 함께 👥",
+        "오늘은 특별히 ✨",
+        "스트레스 해소 💆‍♂️",
+        "커피 한 잔의 여유 ☕",
+        "오후의 힐링 🌅",
+        "새로운 메뉴 시도 🆕"
+      ]
+      return fallbackTitles[Math.floor(Math.random() * fallbackTitles.length)]
+    }
   }
 
   const handleSubmit = async () => {
@@ -46,8 +52,16 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
       // UTC 기준으로 expires_at 계산
       const expiresAt = new Date(now.getTime() + minutes * 60 * 1000).toISOString();
       
-      // 제목이 비어있으면 자동으로 재미있는 제목 생성
-      const finalTitle = title.trim() || generateFunTitle();
+      // 제목이 비어있으면 Gemini API로 자동 생성
+      let finalTitle = title.trim();
+      if (!finalTitle) {
+        setIsGeneratingTitle(true);
+        try {
+          finalTitle = await generateFunTitle();
+        } finally {
+          setIsGeneratingTitle(false);
+        }
+      }
       
       const res = await fetch("/api/start-new-order", {
         method: "POST",
@@ -97,10 +111,15 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  placeholder="세션 이름 (비워두면 자동 생성)"
+                  placeholder="세션 이름 (비워두면 AI가 생성)"
                   className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:outline-none transition-colors"
-                  disabled={isPending}
+                  disabled={isPending || isGeneratingTitle}
                 />
+                {!title.trim() && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    💡 비워두면 AI가 {shopName ? `${shopName}에 맞는` : ''} 재미있는 제목을 만들어줘요!
+                  </p>
+                )}
               </div>
               
               <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -115,19 +134,19 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
                 onClick={() => setShowModal(false)}
                 variant="outline"
                 className="flex-1"
-                disabled={isPending}
+                disabled={isPending || isGeneratingTitle}
               >
                 취소
               </Button>
               <Button
                 onClick={handleSubmit}
-                disabled={isPending}
+                disabled={isPending || isGeneratingTitle}
                 className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
               >
-                {isPending ? (
+                {isPending || isGeneratingTitle ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    세션 생성 중...
+                    {isGeneratingTitle ? 'AI가 제목을 만들고 있어요...' : '세션 생성 중...'}
                   </div>
                 ) : (
                   '시작하기'
