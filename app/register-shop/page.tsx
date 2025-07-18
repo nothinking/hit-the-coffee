@@ -21,7 +21,6 @@ export default function RegisterShopPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [name, setName] = useState("")
-  const [address, setAddress] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   
@@ -47,7 +46,7 @@ export default function RegisterShopPage() {
       const supabase = createSupabaseBrowser()
       const { data, error: supabaseError } = await supabase
         .from("coffee_shops")
-        .insert({ name, address })
+        .insert({ name })
         .select()
         .single()
 
@@ -237,11 +236,6 @@ export default function RegisterShopPage() {
               <div className="space-y-1">
                 <Label htmlFor="name">Shop Name *</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="address">Address (optional)</Label>
-                <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} />
               </div>
             </form>
 

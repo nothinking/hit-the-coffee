@@ -25,7 +25,8 @@ export default async function CoffeeShopListPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">매장 목록</h1>
-          <p className="text-lg text-gray-600">원하는 매장을 선택해서 주문 세션을 시작하세요! 🎯</p>
+          <p className="text-lg text-gray-600">원하는 매장에서 쏘세요~ 🎯</p>
+          <p className="text-sm text-gray-500 mt-2">주문 취합이 편해 집니다</p>
         </div>
 
         {coffeeShops && coffeeShops.length > 0 ? (
