@@ -114,36 +114,43 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
         <>
           {/* Menu list ---------------------------------------------------- */}
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Select Your Items</h3>
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">메뉴를 골라보세요! 🍽️</h3>
+              <p className="text-gray-600">원하는 메뉴를 체크하고 수량을 선택하세요</p>
+            </div>
             {menuItems.length === 0 ? (
-              <p className="text-gray-500">No menu items available.</p>
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">☕</div>
+                <p className="text-gray-500 text-lg">메뉴가 준비 중입니다...</p>
+              </div>
             ) : (
               <div className="grid gap-4">
                 {menuItems.map((item) => (
-                  <Card key={item.id} className="flex items-center justify-between p-4">
+                  <Card key={item.id} className="flex items-center justify-between p-4 hover:shadow-md transition-all duration-200 border-2 hover:border-blue-200">
                     <div className="flex items-center gap-3">
                       <Checkbox
                         id={`item-${item.id}`}
                         checked={item.id in selected}
                         onCheckedChange={(c) => toggleItem(item.id, c as boolean)}
                         disabled={isPending}
+                        className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                       />
                       <div className="leading-tight">
-                        <Label htmlFor={`item-${item.id}`} className="font-medium cursor-pointer">
+                        <Label htmlFor={`item-${item.id}`} className="font-semibold text-lg cursor-pointer hover:text-blue-600 transition-colors">
                           {item.name}
                         </Label>
-                        {item.description && <p className="text-sm text-gray-500">{item.description}</p>}
+                        {item.description && <p className="text-sm text-gray-600 mt-1">{item.description}</p>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">{item.price.toFixed(2)}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-lg text-blue-600">{item.price.toFixed(2)}</span>
                       {item.id in selected && (
                         <Input
                           type="number"
                           min={1}
                           value={selected[item.id]}
                           onChange={(e) => setQty(item.id, Number(e.target.value))}
-                          className="w-20 text-center"
+                          className="w-20 text-center border-2 border-blue-200 focus:border-blue-500"
                           disabled={isPending}
                         />
                       )}
@@ -155,24 +162,47 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
           </div>
 
           {/* Submit -------------------------------------------------------- */}
-          <Button 
-            onClick={handleOrderButtonClick}
-            className="w-full" 
-            disabled={isPending || menuItems.length === 0}
-          >
-            {isPending ? "Submitting…" : "Submit My Order"}
-          </Button>
+          <div className="mt-8">
+            <Button 
+              onClick={handleOrderButtonClick}
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+              disabled={isPending || menuItems.length === 0}
+            >
+              {isPending ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  주문 처리 중...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span>🎯</span>
+                  주문하기!
+                </div>
+              )}
+            </Button>
+            <p className="text-center text-sm text-gray-500 mt-2">
+              버튼을 누르면 이름을 입력할 수 있어요
+            </p>
+          </div>
         </>
       )}
 
       {/* Name Input Popup */}
       {showNamePopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Enter Your Name</h3>
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl border-0">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">👤</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">이름을 알려주세요!</h3>
+              <p className="text-gray-600">주문에 사용할 이름을 입력해주세요</p>
+            </div>
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="popup-participant-name">Your Name</Label>
+                <Label htmlFor="popup-participant-name" className="text-sm font-medium text-gray-700 mb-2 block">
+                  이름
+                </Label>
                 <Input
                   id="popup-participant-name"
                   value={participantName}
@@ -183,18 +213,29 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
                       handleSubmitOrder()
                     }
                   }}
-                  placeholder="e.g. Jane"
+                  placeholder="예: 김철수"
                   autoFocus
                   disabled={isPending}
+                  className="h-12 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-lg"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
                   onClick={handleSubmitOrder}
-                  className="flex-1"
+                  className="flex-1 h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                   disabled={isPending}
                 >
-                  {isPending ? "Submitting…" : "Submit Order"}
+                  {isPending ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      주문 중...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>🚀</span>
+                      주문 완료!
+                    </div>
+                  )}
                 </Button>
                 <Button 
                   onClick={() => {
@@ -202,10 +243,10 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
                     setParticipantName("")
                   }}
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 h-12 text-lg"
                   disabled={isPending}
                 >
-                  Cancel
+                  취소
                 </Button>
               </div>
             </div>

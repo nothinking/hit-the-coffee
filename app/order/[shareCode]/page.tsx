@@ -80,17 +80,32 @@ export default async function OrderPage({ params }: OrderPageProps) {
   }
 
   return (
-    <main className="flex items-center justify-center min-h-screen p-4 bg-gray-50">
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">{coffeeShop.name}</CardTitle>
-          <OrderCountdownInfoWrapper
-            createdAt={order.created_at}
-            expiresAt={order.expires_at}
-            title={order.title}
-            address={coffeeShop.address}
-          />
-        </CardHeader>
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg mb-4">
+              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm font-medium text-gray-600">{coffeeShop.name}에서 쏩니다</span>
+            </div>
+
+            <OrderCountdownInfoWrapper
+              createdAt={order.created_at}
+              expiresAt={order.expires_at}
+              title={order.title}
+              address={coffeeShop.address}
+            />
+          </div>
+
+          {/* Main Content Card */}
+          <Card className="w-full shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="text-center pb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-sm font-medium text-green-600">주문 세션 활성화</span>
+              </div>
+            </CardHeader>
         <CardContent>
           <OrderSelectionForm
             orderId={order.id}
@@ -195,6 +210,8 @@ export default async function OrderPage({ params }: OrderPageProps) {
           </div>
         </CardContent>
       </Card>
+        </div>
+      </div>
     </main>
   )
 }
