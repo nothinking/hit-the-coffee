@@ -265,7 +265,13 @@ export default function QuickOrderPage() {
 
   function goToPreviousStep() {
     if (currentStep === 'menu') {
+      // 메뉴 단계에서 입력 단계로 돌아갈 때 상태 초기화
       setCurrentStep('input')
+      // 추출된 메뉴는 유지하되, 입력 상태는 초기화
+      setExtractedMenus([])
+      setEditingMenus([])
+      setExtractionError(null)
+      setIsExtracting(false)
     } else if (currentStep === 'order') {
       setCurrentStep('menu')
     }
@@ -438,7 +444,7 @@ export default function QuickOrderPage() {
                     <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴 텍스트 입력</h3>
                     <p className="text-sm text-gray-600 mb-4">
-                      메뉴 정보를 텍스트로 입력하거나 텍스트 파일(.txt)을 업로드해주세요
+                      메뉴 정보를 텍스트로 입력해주세요
                     </p>
                     <Textarea
                       value={textInput}
@@ -459,14 +465,6 @@ export default function QuickOrderPage() {
                         뒤로 가기
                       </Button>
                       <Button 
-                        onClick={() => document.getElementById('text-file-input')?.click()} 
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        파일 선택
-                      </Button>
-                      <Button 
                         onClick={() => {
                           if (textInput.trim()) {
                             // 텍스트 입력 완료 후 다음 단계로
@@ -481,82 +479,48 @@ export default function QuickOrderPage() {
                         입력 완료
                       </Button>
                     </div>
-                    
-                    <input
-                      id="text-file-input"
-                      type="file"
-                      accept=".txt,.text"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onload = (e) => {
-                            setTextInput(e.target?.result as string)
-                          }
-                          reader.readAsText(file)
-                        }
-                      }}
-                    />
                   </div>
                 </div>
               ) : inputMethod === 'text' && textInputCompleted && !extractedMenus.length ? (
                 <div className="space-y-4">
-                  <div className="text-center p-8 bg-green-50 rounded-lg border-2 border-dashed border-green-200">
-                    <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">입력된 텍스트 확인</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      입력한 텍스트를 확인하고 메뉴 정보를 추출합니다
-                    </p>
-                    <div className="p-4 bg-white rounded-lg border border-green-200 text-left">
-                      <h4 className="font-medium text-green-900 mb-2">입력된 텍스트:</h4>
-                      <pre className="text-sm text-green-800 whitespace-pre-wrap">{textInput}</pre>
+                  {isExtracting ? (
+                    <div className="text-center p-8 bg-blue-50 rounded-lg">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-sm text-gray-600 mb-2">메뉴 정보를 추출하고 있습니다...</p>
+                      <p className="text-xs text-gray-500">잠시만 기다려주세요</p>
                     </div>
-                    <div className="flex gap-2 mt-4">
-                      <Button 
-                        onClick={() => {
-                          setTextInput("")
-                          setTextInputCompleted(false)
-                        }} 
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        다시 입력
-                      </Button>
-                      <Button 
-                        onClick={() => document.getElementById('text-file-input-confirm')?.click()} 
-                        variant="outline"
-                        className="flex-1"
-                      >
-                        <Upload className="w-4 h-4 mr-2" />
-                        파일 변경
-                      </Button>
-                      <Button 
-                        onClick={extractMenuInfo} 
-                        className="flex-1"
-                        size="lg"
-                      >
-                        🔍 메뉴 정보 추출하기
-                      </Button>
+                  ) : (
+                    <div className="text-center p-8 bg-green-50 rounded-lg border-2 border-dashed border-green-200">
+                      <Edit3 className="w-16 h-16 mx-auto mb-4 text-green-500" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">입력된 텍스트 확인</h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        입력한 텍스트를 확인하고 메뉴 정보를 추출합니다
+                      </p>
+                      <div className="p-4 bg-white rounded-lg border border-green-200 text-left">
+                        <h4 className="font-medium text-green-900 mb-2">입력된 텍스트:</h4>
+                        <pre className="text-sm text-green-800 whitespace-pre-wrap">{textInput}</pre>
+                      </div>
+                      <div className="flex gap-2 mt-4">
+                        <Button 
+                          onClick={() => {
+                            setTextInput("")
+                            setTextInputCompleted(false)
+                          }} 
+                          variant="outline"
+                          className="flex-1"
+                        >
+                          다시 입력
+                        </Button>
+                        <Button 
+                          onClick={extractMenuInfo} 
+                          className="flex-1"
+                          size="lg"
+                        >
+                          🔍 메뉴 정보 추출하기
+                        </Button>
+                      </div>
                     </div>
-                    
-                    <input
-                      id="text-file-input-confirm"
-                      type="file"
-                      accept=".txt,.text"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0]
-                        if (file) {
-                          const reader = new FileReader()
-                          reader.onload = (e) => {
-                            setTextInput(e.target?.result as string)
-                          }
-                          reader.readAsText(file)
-                        }
-                      }}
-                    />
-                  </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -588,8 +552,16 @@ export default function QuickOrderPage() {
                         onClick={extractMenuInfo} 
                         className="w-full"
                         size="lg"
+                        disabled={isExtracting}
                       >
-                        🔍 메뉴 정보 추출하기
+                        {isExtracting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            추출 중...
+                          </>
+                        ) : (
+                          '🔍 메뉴 정보 추출하기'
+                        )}
                       </Button>
                     </div>
                   )}
@@ -612,8 +584,16 @@ export default function QuickOrderPage() {
                             onClick={extractMenuInfo} 
                             variant="outline"
                             className="flex-1"
+                            disabled={isExtracting}
                           >
-                            🔄 다시 시도
+                            {isExtracting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                추출 중...
+                              </>
+                            ) : (
+                              '🔄 다시 시도'
+                            )}
                           </Button>
                         </div>
                       </div>

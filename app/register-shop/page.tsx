@@ -342,8 +342,16 @@ export default function RegisterShopPage() {
                         onClick={extractMenuInfo} 
                         className="w-full"
                         size="lg"
+                        disabled={isExtracting}
                       >
-                        🔍 메뉴 정보 추출하기
+                        {isExtracting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            추출 중...
+                          </>
+                        ) : (
+                          '🔍 메뉴 정보 추출하기'
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -360,8 +368,16 @@ export default function RegisterShopPage() {
                           onClick={extractMenuInfo} 
                           variant="outline"
                           className="flex-1"
+                          disabled={isExtracting}
                         >
-                        🔄 다시 시도
+                          {isExtracting ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              추출 중...
+                            </>
+                          ) : (
+                            '🔄 다시 시도'
+                          )}
                         </Button>
                         <Button 
                           onClick={() => setExtractionError(null)} 
