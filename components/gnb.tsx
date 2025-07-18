@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from "@/components/ui/navigation-menu";
+import { ShoppingCart } from "lucide-react";
 
 export function GNB() {
   return (
@@ -7,19 +8,26 @@ export function GNB() {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-            <span className="text-blue-600 font-bold text-lg">🎯</span>
+            <ShoppingCart className="w-5 h-5 text-blue-600" />
           </div>
           <span className="font-bold text-xl text-white tracking-tight group-hover:text-blue-100 transition-colors">
-            주문취합
+            주문취합앱
           </span>
         </Link>
         
         <NavigationMenu>
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
+              <Link href="/" legacyBehavior passHref>
+                <NavigationMenuLink className="px-4 py-2 text-white hover:text-blue-100 hover:bg-white/10 rounded-lg transition-all duration-200 font-medium">
+                  홈
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <Link href="/shops" legacyBehavior passHref>
                 <NavigationMenuLink className="px-4 py-2 text-white hover:text-blue-100 hover:bg-white/10 rounded-lg transition-all duration-200 font-medium">
-                  매장 목록
+                  대시보드
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
