@@ -25,9 +25,16 @@ export function GNB() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
+              <Link href="/quick-order" legacyBehavior passHref>
+                <NavigationMenuLink className="px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg transition-all duration-200 font-medium border border-orange-400 hover:border-orange-500">
+                  🚀 빠른 주문
+                </NavigationMenuLink>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <Link href="/shops" legacyBehavior passHref>
                 <NavigationMenuLink className="px-4 py-2 text-white hover:text-blue-100 hover:bg-white/10 rounded-lg transition-all duration-200 font-medium">
-                  대시보드
+                  매장목록
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>

@@ -1,0 +1,693 @@
+"use client"
+
+import { useState, type FormEvent, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { useToast } from "@/hooks/use-toast"
+import { Camera, Upload, X, Edit3, Loader2, ArrowLeft, ArrowRight, Link as LinkIcon } from "lucide-react"
+import { createPortal } from "react-dom"
+
+interface MenuItem {
+  name: string
+  description: string
+  price: string
+}
+
+type Step = 'camera' | 'menu' | 'order'
+
+export default function QuickOrderPage() {
+  const router = useRouter()
+  const { toast } = useToast()
+  const [currentStep, setCurrentStep] = useState<Step>('camera')
+  const [shopName, setShopName] = useState("")
+  const [orderTitle, setOrderTitle] = useState("")
+  const [expiresInMinutes, setExpiresInMinutes] = useState("30")
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+  
+  // Camera and menu extraction states
+  const [showCamera, setShowCamera] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [extractedMenus, setExtractedMenus] = useState<MenuItem[]>([])
+  const [isExtracting, setIsExtracting] = useState(false)
+  const [editingMenus, setEditingMenus] = useState<MenuItem[]>([])
+  const [isEditing, setIsEditing] = useState(false)
+  const [extractionError, setExtractionError] = useState<string | null>(null)
+  
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // ESC 키로 카메라 모달 닫기
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showCamera) {
+        stopCamera()
+      }
+    }
+
+    if (showCamera) {
+      document.addEventListener('keydown', handleEscKey)
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey)
+    }
+  }, [showCamera])
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+
+    try {
+      const minutes = expiresInMinutes === "" ? 30 : Number(expiresInMinutes);
+      
+      const response = await fetch("/api/quick-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopName,
+          title: orderTitle,
+          expiresInMinutes: minutes,
+          menus: editingMenus.map(menu => ({
+            name: menu.name,
+            description: menu.description,
+            price: menu.price || "0"
+          }))
+        })
+      })
+
+      const data = await response.json()
+      
+      if (!data.success) {
+        setError(data.message)
+        return
+      }
+
+      toast({
+        title: "주문 링크 생성 완료!",
+        description: "주문 링크가 성공적으로 생성되었습니다."
+      })
+
+      // 주문 페이지로 바로 이동
+      if (data.shareCode) {
+        router.push(`/order/${data.shareCode}`)
+      }
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Camera functions
+  async function startCamera() {
+    try {
+      const constraints = {
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+      }
+      setShowCamera(true)
+    } catch (err) {
+      console.error("Camera error:", err)
+      toast({
+        title: "Camera Error",
+        description: "카메라에 접근할 수 없습니다. 브라우저 설정을 확인해주세요.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setShowCamera(false)
+  }
+
+  function capturePhoto() {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d')
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth
+        canvasRef.current.height = videoRef.current.videoHeight
+        context.drawImage(videoRef.current, 0, 0)
+        const imageData = canvasRef.current.toDataURL('image/jpeg')
+        setCapturedImage(imageData)
+        stopCamera()
+      }
+    }
+  }
+
+  async function extractMenuInfo() {
+    if (!capturedImage) return
+
+    setIsExtracting(true)
+    setExtractionError(null)
+    try {
+      const response = await fetch(capturedImage)
+      const blob = await response.blob()
+
+      const formData = new FormData()
+      formData.append('image', blob, 'menu.jpg')
+
+      const extractResponse = await fetch('/api/extract-menu-info', {
+        method: 'POST',
+        body: formData
+      })
+
+      const result = await extractResponse.json()
+      
+      if (result.success) {
+        try {
+          let jsonText = result.text.trim()
+          if (jsonText.startsWith('```json')) {
+            jsonText = jsonText.replace(/^```json\n/, '').replace(/\n```$/, '')
+          } else if (jsonText.startsWith('```')) {
+            jsonText = jsonText.replace(/^```\n/, '').replace(/\n```$/, '')
+          }
+          
+          const menus = JSON.parse(jsonText)
+          if (Array.isArray(menus) && menus.length > 0) {
+            setExtractedMenus(menus)
+            setEditingMenus(menus)
+            setExtractionError(null)
+            toast({
+              title: "메뉴 추출 완료",
+              description: `${menus.length}개의 메뉴를 추출했습니다.`
+            })
+            setCurrentStep('menu')
+          } else {
+            setExtractionError("추출된 메뉴가 없습니다. 다시 촬영해주세요.")
+            toast({
+              title: "메뉴 없음",
+              description: "추출된 메뉴가 없습니다. 다시 촬영해주세요.",
+              variant: "destructive"
+            })
+          }
+        } catch (parseError) {
+          console.error("JSON Parse Error:", parseError)
+          setExtractionError("메뉴 정보를 파싱할 수 없습니다. 다시 촬영해주세요.")
+          toast({
+            title: "파싱 오류",
+            description: "메뉴 정보를 파싱할 수 없습니다. 다시 촬영해주세요.",
+            variant: "destructive"
+          })
+        }
+      } else {
+        setExtractionError(result.message)
+        toast({
+          title: "추출 실패",
+          description: result.message,
+          variant: "destructive"
+        })
+      }
+    } catch (err) {
+      setExtractionError("메뉴 추출 중 오류가 발생했습니다. 다시 촬영해주세요.")
+      toast({
+        title: "오류",
+        description: "메뉴 추출 중 오류가 발생했습니다. 다시 촬영해주세요.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsExtracting(false)
+    }
+  }
+
+  function updateMenuItem(index: number, field: keyof MenuItem, value: string) {
+    const updatedMenus = [...editingMenus]
+    updatedMenus[index] = { ...updatedMenus[index], [field]: value }
+    setEditingMenus(updatedMenus)
+  }
+
+  function removeMenuItem(index: number) {
+    setEditingMenus(editingMenus.filter((_, i) => i !== index))
+  }
+
+  function addMenuItem() {
+    setEditingMenus([...editingMenus, { name: '', description: '', price: '' }])
+  }
+
+  function goToNextStep() {
+    if (currentStep === 'camera' && capturedImage && extractedMenus.length > 0) {
+      setCurrentStep('menu')
+    } else if (currentStep === 'menu' && editingMenus.length > 0) {
+      setCurrentStep('order')
+    }
+  }
+
+  function goToPreviousStep() {
+    if (currentStep === 'menu') {
+      setCurrentStep('camera')
+    } else if (currentStep === 'order') {
+      setCurrentStep('menu')
+    }
+  }
+
+  function retakePhoto() {
+    setCapturedImage(null)
+    setExtractedMenus([])
+    setEditingMenus([])
+    setExtractionError(null)
+    setCurrentStep('camera')
+  }
+
+  const steps = [
+    { id: 'camera', title: '메뉴판 촬영', description: '카메라로 메뉴판을 촬영합니다' },
+    { id: 'menu', title: '메뉴 확인', description: '추출된 메뉴를 확인하고 편집합니다' },
+    { id: 'order', title: '주문 링크 생성', description: '주문 링크를 생성합니다' }
+  ]
+
+  return (
+    <main className="flex items-center justify-center min-h-screen p-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <Card className="w-full max-w-2xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-center">빠른 주문 링크 생성</CardTitle>
+          
+          {/* Progress Steps */}
+          <div className="flex items-center justify-between mt-6">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                  currentStep === step.id 
+                    ? 'bg-blue-600 text-white' 
+                    : steps.findIndex(s => s.id === currentStep) > index
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-200 text-gray-600'
+                }`}>
+                  {steps.findIndex(s => s.id === currentStep) > index ? '✓' : index + 1}
+                </div>
+                {index < steps.length - 1 && (
+                  <div className={`w-12 h-0.5 mx-2 ${
+                    steps.findIndex(s => s.id === currentStep) > index ? 'bg-green-500' : 'bg-gray-200'
+                  }`} />
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="text-center mt-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {steps.find(s => s.id === currentStep)?.title}
+            </h3>
+            <p className="text-sm text-gray-600">
+              {steps.find(s => s.id === currentStep)?.description}
+            </p>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          {/* Step 1: Camera */}
+          {currentStep === 'camera' && (
+            <div className="space-y-4">
+              {!capturedImage ? (
+                <div className="space-y-4">
+                  <div className="text-center p-8 bg-blue-50 rounded-lg border-2 border-dashed border-blue-200">
+                    <Camera className="w-16 h-16 mx-auto mb-4 text-blue-500" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴판 촬영</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      메뉴판이 잘 보이도록 촬영해주세요
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={startCamera} 
+                        className="flex-1"
+                        size="lg"
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        카메라로 촬영
+                      </Button>
+                      <Button 
+                        onClick={() => document.getElementById('file-input')?.click()} 
+                        className="flex-1"
+                        variant="outline"
+                        size="lg"
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        파일 선택
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <input
+                    id="file-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (e) => {
+                          setCapturedImage(e.target?.result as string)
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <img 
+                      src={capturedImage} 
+                      alt="Captured menu" 
+                      className="w-full rounded-lg"
+                    />
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="absolute top-2 right-2"
+                      onClick={retakePhoto}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {!isExtracting && extractedMenus.length === 0 && !extractionError && (
+                    <div className="text-center p-6 bg-gray-50 rounded-lg">
+                      <p className="text-sm text-gray-600 mb-4">
+                        촬영한 사진에서 메뉴 정보를 자동으로 추출합니다
+                      </p>
+                      <Button 
+                        onClick={extractMenuInfo} 
+                        className="w-full"
+                        size="lg"
+                      >
+                        🔍 메뉴 정보 추출하기
+                      </Button>
+                    </div>
+                  )}
+
+                  {extractionError && (
+                    <div className="space-y-4">
+                      <div className="text-center p-6 bg-red-50 rounded-lg border border-red-200">
+                        <p className="text-sm text-red-600 mb-4">
+                          {extractionError}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button 
+                            onClick={retakePhoto} 
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            📸 다시 촬영
+                          </Button>
+                          <Button 
+                            onClick={extractMenuInfo} 
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            🔄 다시 시도
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {isExtracting && (
+                    <div className="text-center p-8 bg-blue-50 rounded-lg">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+                      <p className="text-sm text-gray-600 mb-2">메뉴 정보를 추출하고 있습니다...</p>
+                      <p className="text-xs text-gray-500">잠시만 기다려주세요</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 2: Menu */}
+          {currentStep === 'menu' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold">추출된 메뉴 ({editingMenus.length}개)</h3>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setIsEditing(!isEditing)}
+                  >
+                    <Edit3 className="w-4 h-4 mr-1" />
+                    {isEditing ? "편집 완료" : "메뉴 편집"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={addMenuItem}
+                    disabled={!isEditing}
+                  >
+                    + 메뉴 추가
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {editingMenus.map((menu, index) => (
+                  <Card key={index} className={isEditing ? "ring-2 ring-blue-200" : ""}>
+                    <CardContent className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">
+                            {index + 1}
+                          </div>
+                          <Label className="text-sm font-medium">메뉴 {index + 1}</Label>
+                        </div>
+                        {isEditing && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeMenuItem(index)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">메뉴 이름 *</Label>
+                          <Input
+                            value={menu.name}
+                            onChange={(e) => updateMenuItem(index, 'name', e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="예: 아메리카노"
+                            className={!isEditing ? "bg-gray-50" : ""}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label className="text-sm font-medium">설명</Label>
+                          <Textarea
+                            value={menu.description}
+                            onChange={(e) => updateMenuItem(index, 'description', e.target.value)}
+                            disabled={!isEditing}
+                            rows={2}
+                            placeholder="메뉴에 대한 설명을 입력하세요"
+                            className={!isEditing ? "bg-gray-50" : ""}
+                          />
+                        </div>
+                          
+                        <div>
+                          <Label className="text-sm font-medium">가격 (원)</Label>
+                          <Input
+                            value={menu.price}
+                            onChange={(e) => updateMenuItem(index, 'price', e.target.value)}
+                            disabled={!isEditing}
+                            placeholder="가격을 입력하세요"
+                            className={!isEditing ? "bg-gray-50" : ""}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                <p className="font-medium mb-1">💡 안내사항</p>
+                <ul className="text-xs space-y-1">
+                  <li>• 메뉴 편집이 완료되면 다음 단계로 진행해주세요</li>
+                  <li>• 메뉴 이름은 필수 입력 항목입니다</li>
+                  <li>• 모든 메뉴가 올바르게 입력되었는지 확인해주세요</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Order Link Generation */}
+          {currentStep === 'order' && (
+            <div className="space-y-4">
+              <div className="text-center p-6 bg-green-50 rounded-lg border border-green-200">
+                <LinkIcon className="w-12 h-12 mx-auto mb-4 text-green-600" />
+                <h3 className="text-lg font-medium text-green-900 mb-2">주문 링크 생성</h3>
+                <p className="text-sm text-green-700">
+                  추출된 메뉴 {editingMenus.length}개로 주문 링크를 생성합니다
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <Label htmlFor="shopName">매장 이름 *</Label>
+                  <Input 
+                    id="shopName" 
+                    value={shopName} 
+                    onChange={(e) => setShopName(e.target.value)} 
+                    placeholder="예: 스타벅스 강남점"
+                    required 
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="orderTitle">주문 제목 (선택사항)</Label>
+                  <Input 
+                    id="orderTitle" 
+                    value={orderTitle} 
+                    onChange={(e) => setOrderTitle(e.target.value)} 
+                    placeholder="예: 오후 커피 타임"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="expiresInMinutes">주문 마감 시간 (분)</Label>
+                  <Input 
+                    id="expiresInMinutes" 
+                    type="number"
+                    min="1"
+                    max="1440"
+                    value={expiresInMinutes} 
+                    onChange={(e) => setExpiresInMinutes(e.target.value)} 
+                    placeholder="30"
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-sm text-red-600 text-center" role="alert">
+                    {error}
+                  </p>
+                )}
+              </form>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex gap-2 pt-4 border-t">
+            {currentStep !== 'camera' && (
+              <Button 
+                onClick={goToPreviousStep} 
+                variant="outline" 
+                className="flex-1"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                이전
+              </Button>
+            )}
+            
+            {currentStep === 'camera' && capturedImage && extractedMenus.length > 0 && (
+              <Button 
+                onClick={goToNextStep} 
+                className="flex-1"
+              >
+                다음
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+            
+            {currentStep === 'menu' && editingMenus.length > 0 && (
+              <Button 
+                onClick={goToNextStep} 
+                className="flex-1"
+              >
+                다음
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            )}
+            
+            {currentStep === 'order' && (
+              <Button 
+                className="flex-1" 
+                disabled={loading || !shopName}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleSubmit(e as any)
+                }}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    링크 생성 중...
+                  </>
+                ) : (
+                  <>
+                    <LinkIcon className="w-4 h-4 mr-2" />
+                    주문 링크 생성하기
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Camera Modal */}
+      {showCamera && mounted && createPortal(
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold">메뉴판 촬영</h3>
+              <p className="text-sm text-gray-600">메뉴판이 잘 보이도록 촬영해주세요</p>
+            </div>
+            
+            <div className="relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                className="w-full rounded-lg"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+              
+              {/* 촬영 가이드 */}
+              <div className="absolute inset-0 border-2 border-white border-dashed rounded-lg m-2 pointer-events-none">
+                <div className="absolute top-2 left-2 text-white text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
+                  메뉴판 영역
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 mt-4">
+              <Button onClick={capturePhoto} className="flex-1" size="lg">
+                📸 사진 촬영
+              </Button>
+              <Button onClick={stopCamera} variant="outline" className="flex-1">
+                취소
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </main>
+  )
+} 

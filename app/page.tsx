@@ -19,11 +19,16 @@ export default function Home() {
             <span className="text-blue-600 block">더 즐겁고 편리해요</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            팀원들과 함께 주문할 때 복잡한 계산과 정산을 간편하게 해주는 
+            매장 등록 없이도 메뉴판만 촬영하면 바로 주문 링크를 생성할 수 있는 
             실시간 주문 취합 서비스입니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Link href="/quick-order">
+                🚀 빠른 주문 링크 생성
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
               <Link href="/register-shop">
                 매장 등록하기
               </Link>
@@ -183,6 +188,11 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+              <Link href="/quick-order">
+                🚀 빠른 주문 링크 생성
+              </Link>
+            </Button>
+            <Button asChild variant="outline" size="lg">
               <Link href="/register-shop">
                 매장 등록하기
               </Link>

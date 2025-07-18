@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { OrderSessionCard } from "@/components/order-session-card"
 import { StartNewOrderForm } from "@/components/start-new-order-form"
 import { DeleteShopButton } from "@/components/delete-shop-button"
+import { ConvertTemporaryShopButton } from "@/components/convert-temporary-shop-button"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Camera, 
@@ -407,15 +408,37 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{coffeeShop.name}</h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-900">{coffeeShop.name}</h1>
+                {coffeeShop.is_temporary && (
+                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                    ⚡ 임시 매장
+                  </span>
+                )}
+              </div>
               {coffeeShop.address && (
                 <p className="text-gray-600 flex items-center gap-2">
                   <Coffee className="w-4 h-4" />
                   {coffeeShop.address}
                 </p>
               )}
+              {coffeeShop.is_temporary && !coffeeShop.address && (
+                <p className="text-orange-600 flex items-center gap-2 text-sm">
+                  <span>⚡</span>
+                  빠른 주문으로 생성된 임시 매장입니다
+                </p>
+              )}
             </div>
-            <DeleteShopButton shopId={shopId} />
+            <div className="flex flex-col gap-2">
+              {coffeeShop.is_temporary && (
+                <ConvertTemporaryShopButton
+                  shopId={shopId}
+                  shopName={coffeeShop.name}
+                  isTemporary={coffeeShop.is_temporary}
+                />
+              )}
+              <DeleteShopButton shopId={shopId} />
+            </div>
           </div>
         </div>
       </div>

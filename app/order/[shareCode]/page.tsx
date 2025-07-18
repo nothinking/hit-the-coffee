@@ -6,6 +6,7 @@ import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper
 import OrderSelectionDeleteButton from "@/components/OrderSelectionDeleteButton";
 import { ReceiptPopup } from "@/components/receipt-popup";
 import { ShareSessionButton } from "@/components/share-session-button";
+import { ConvertTemporaryShopButton } from "@/components/convert-temporary-shop-button";
 
 interface OrderPageProps {
   params: {
@@ -105,6 +106,15 @@ export default async function OrderPage({ params }: OrderPageProps) {
                 shareCode={shareCode}
                 orderTitle={order.title}
                 shopName={coffeeShop.name}
+              />
+            </div>
+
+            {/* Convert Temporary Shop Button */}
+            <div className="mt-4">
+              <ConvertTemporaryShopButton
+                shopId={coffeeShop.id}
+                shopName={coffeeShop.name}
+                isTemporary={coffeeShop.is_temporary || false}
               />
             </div>
           </div>
