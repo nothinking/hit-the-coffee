@@ -13,7 +13,6 @@ import { Camera, Upload, X, Edit3, Loader2 } from "lucide-react"
 
 interface MenuItem {
   name: string
-  description: string
   price: string
 }
 
@@ -62,8 +61,7 @@ export default function RegisterShopPage() {
             shopId: data.id,
             menus: editingMenus.map(menu => ({
               name: menu.name,
-              description: menu.description,
-              price: parseFloat(menu.price) || 0
+              price: menu.price || "0"
             }))
           })
         })
@@ -220,7 +218,7 @@ export default function RegisterShopPage() {
   }
 
   function addMenuItem() {
-    setEditingMenus([...editingMenus, { name: '', description: '', price: '' }])
+    setEditingMenus([...editingMenus, { name: '', price: '' }])
   }
 
   return (
@@ -425,36 +423,17 @@ export default function RegisterShopPage() {
                                 />
                               </div>
                               
-                              <div>
-                                <Label className="text-sm font-medium">설명</Label>
-                                <Textarea
-                                  value={menu.description}
-                                  onChange={(e) => updateMenuItem(index, 'description', e.target.value)}
-                                  disabled={!isEditing}
-                                  rows={2}
-                                  placeholder="메뉴에 대한 설명을 입력하세요"
-                                  className={!isEditing ? "bg-gray-50" : ""}
-                                />
-                              </div>
+
                               
                               <div>
                                 <Label className="text-sm font-medium">가격 (원)</Label>
-                                <Input
-                                  type="number"
-                                  value={menu.price}
-                                  onChange={(e) => {
-                                    const value = e.target.value
-                                    // 숫자와 소수점만 허용
-                                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                                      updateMenuItem(index, 'price', value)
-                                    }
-                                  }}
-                                  disabled={!isEditing}
-                                  placeholder="0"
-                                  min="0"
-                                  step="100"
-                                  className={!isEditing ? "bg-gray-50" : ""}
-                                />
+                                                                   <Input
+                                     value={menu.price}
+                                     onChange={(e) => updateMenuItem(index, 'price', e.target.value)}
+                                     disabled={!isEditing}
+                                     placeholder="가격을 입력하세요"
+                                     className={!isEditing ? "bg-gray-50" : ""}
+                                   />
                               </div>
                             </div>
                           </CardContent>

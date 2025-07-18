@@ -13,7 +13,6 @@ interface MenuItemCardProps {
   item: {
     id: string
     name: string
-    description?: string | null
     price: number
   }
 }
@@ -46,7 +45,7 @@ export function MenuItemCard({ shopId, item }: MenuItemCardProps) {
     <Card>
       <CardHeader>
         <CardTitle>{item.name}</CardTitle>
-        {item.description && <CardDescription>{item.description}</CardDescription>}
+
       </CardHeader>
       <CardContent className="flex justify-between items-center">
         <p className="text-lg font-semibold">{item.price.toFixed(2)}</p>

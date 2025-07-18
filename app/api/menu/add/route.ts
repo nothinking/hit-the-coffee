@@ -14,11 +14,10 @@ export async function POST(req: NextRequest) {
     if (!shopId || !Array.isArray(menus)) {
       return NextResponse.json({ success: false, message: "shopId와 menus가 필요합니다." }, { status: 400 });
     }
-    // menus: [{ name, description, price }]
+    // menus: [{ name, price }]
     const inserts = menus.map((menu: any) => ({
       coffee_shop_id: shopId,
       name: menu.name,
-      description: menu.description || null,
       price: menu.price ?? null,
     }));
     const { error } = await supabase.from("menu_items").insert(inserts);

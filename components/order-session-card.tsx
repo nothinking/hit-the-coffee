@@ -202,7 +202,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between px-4">
                 <span className="font-semibold">
-                  View Selections ({totalSelectionsCount} items, ₩{totalOrderPrice.toFixed(2)})
+                  View Selections ({totalSelectionsCount} items, {totalOrderPrice.toFixed(2)})
                 </span>
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -215,7 +215,7 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
                     {selections.map((selection) => (
                       <li key={selection.id} className="flex justify-between items-center text-sm">
                         <span>
-                          {selection.quantity}x {selection.menu_items.name} (₩{selection.menu_items.price.toFixed(2)}{" "}
+                          {selection.quantity}x {selection.menu_items.name} ({selection.menu_items.price.toFixed(2)}{" "}
                           each)
                         </span>
                         <Button

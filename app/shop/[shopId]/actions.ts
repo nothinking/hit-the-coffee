@@ -16,21 +16,16 @@ function generateShareCode(length = 6): string {
 export async function addMenuItem(shopId: string, formData: FormData) {
   const supabase = await createSupabaseServer()
   const name = formData.get("name") as string
-  const description = formData.get("description") as string
-  const price = Number.parseFloat(formData.get("price") as string)
+  const price = formData.get("price") as string
 
   if (!name || !price) {
     return { success: false, message: "Name and Price are required." }
-  }
-  if (isNaN(price) || price <= 0) {
-    return { success: false, message: "Price must be a positive number." }
   }
 
   const { error } = await supabase.from("menu_items").insert({
     coffee_shop_id: shopId,
     name,
-    description,
-    price,
+    price: price || "0",
   })
 
   if (error) {
@@ -40,6 +35,39 @@ export async function addMenuItem(shopId: string, formData: FormData) {
 
   revalidatePath(`/shop/${shopId}`)
   return { success: true, message: "Menu item added successfully!" }
+}
+
+export async function updateMenuItem(shopId: string, itemId: string, formData: FormData) {
+  console.log('updateMenuItem called with:', { shopId, itemId })
+  const supabase = await createSupabaseServer()
+  const name = formData.get("name") as string
+  const price = formData.get("price") as string
+
+  console.log('Form data:', { name, price })
+
+  if (!name || !price) {
+    return { success: false, message: "Name and Price are required." }
+  }
+
+  console.log('Attempting to update menu item with ID:', itemId)
+  const { data, error } = await supabase
+    .from("menu_items")
+    .update({
+      name,
+      price: price || "0",
+    })
+    .eq("id", itemId)
+    .select()
+
+  if (error) {
+    console.error("Error updating menu item:", error)
+    return { success: false, message: error.message }
+  }
+
+  console.log('Update successful, updated data:', data)
+
+  revalidatePath(`/shop/${shopId}`)
+  return { success: true, message: "Menu item updated successfully!" }
 }
 
 export async function deleteMenuItem(shopId: string, itemId: string) {
@@ -54,6 +82,44 @@ export async function deleteMenuItem(shopId: string, itemId: string) {
 
   revalidatePath(`/shop/${shopId}`)
   return { success: true, message: "Menu item deleted successfully!" }
+}
+
+export async function resetAllMenus(shopId: string) {
+  const supabase = await createSupabaseServer()
+
+  // Delete all menu items for this shop
+  const { error } = await supabase
+    .from("menu_items")
+    .delete()
+    .eq("coffee_shop_id", shopId)
+
+  if (error) {
+    console.error("Error resetting menus:", error)
+    return { success: false, message: error.message }
+  }
+
+  revalidatePath(`/shop/${shopId}`)
+  return { success: true, message: "All menus have been reset successfully!" }
+}
+
+export async function addMultipleMenus(shopId: string, menus: Array<{name: string, price: string}>) {
+  const supabase = await createSupabaseServer()
+
+  const menuData = menus.map(menu => ({
+    coffee_shop_id: shopId,
+    name: menu.name,
+    price: menu.price || "0",
+  }))
+
+  const { error } = await supabase.from("menu_items").insert(menuData)
+
+  if (error) {
+    console.error("Error adding multiple menus:", error)
+    return { success: false, message: error.message }
+  }
+
+  revalidatePath(`/shop/${shopId}`)
+  return { success: true, message: `${menus.length} menu items added successfully!` }
 }
 
 export async function startNewOrder(shopId: string, title?: string, expiresInMinutes?: number) {

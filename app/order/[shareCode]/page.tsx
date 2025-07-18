@@ -113,7 +113,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                       <span className="truncate">{sel.participant_name}</span>
                       <span className="truncate text-left">{Array.isArray(menuItems) ? menuItems[0]?.name || "-" : menuItems?.name || "-"}</span>
                       <span className="text-center">{sel.quantity}</span>
-                      <span className="text-right">{Array.isArray(menuItems) ? `₩${menuItems[0]?.price?.toFixed(2) ?? "-"}` : `₩${menuItems?.price?.toFixed(2) ?? "-"}`}</span>
+                      <span className="text-right">{Array.isArray(menuItems) ? `${menuItems[0]?.price?.toFixed(2) ?? "-"}` : `${menuItems?.price?.toFixed(2) ?? "-"}`}</span>
                       <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
                     </div>
                   );
@@ -138,14 +138,14 @@ export default async function OrderPage({ params }: OrderPageProps) {
                     <div key={item.name + item.price} className="grid grid-cols-[1fr_40px_70px] gap-x-2 py-1 items-center">
                       <span className="truncate text-left">{item.name}</span>
                       <span className="text-center">{item.quantity}</span>
-                      <span className="text-right">₩{(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="text-right">{(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
                   <hr className="my-2" />
                   <div className="flex justify-between font-bold text-base">
                     <span>TOTAL</span>
                     <span>
-                      ₩{mergedMenu.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}
+                      {mergedMenu.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-end text-sm mt-1 text-gray-600">
