@@ -71,35 +71,39 @@ export function StartNewOrderForm({ shopId }: { shopId: string }) {
           }
         })
       }}
-      className="flex flex-col gap-2 w-full max-w-xl"
+      className="flex flex-col gap-3 w-full"
     >
-      <div className="flex flex-row gap-2 items-center w-full">
+      <div className="flex flex-col gap-2">
         <input
           type="text"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="왜 쏘나요? (비워두면 자동 생성)"
-          className="border rounded px-2 py-1 flex-1 min-w-0"
+          placeholder="세션 이름 (비워두면 자동 생성)"
+          className="border-2 border-gray-200 rounded-lg px-3 py-2 flex-1 text-sm focus:border-blue-500 focus:outline-none transition-colors"
           disabled={isPending}
         />
-        <input
-          type="text"
-          min={1}
-          value={expiresInMinutes}
-          onChange={e => {
-            const val = e.target.value;
-            if (/^\d*$/.test(val)) {
-              setExpiresInMinutes(val === "" ? "" : Number(val));
-            }
-          }}
-          placeholder="만료(분)"
-          className="border rounded px-2 py-1 w-10"
-          disabled={isPending}
-        />
-        <span className="text-xs text-muted-foreground whitespace-nowrap">기본 30(분)</span>
-        <Button type="submit" disabled={isPending} className="whitespace-nowrap">빵야빵야</Button>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span>⏰ 만료시간: 30분</span>
+        </div>
       </div>
-      {error && <span className="text-red-500 ml-2">{error}</span>}
+      <Button 
+        type="submit" 
+        disabled={isPending} 
+        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        {isPending ? (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            세션 생성 중...
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span>🎯</span>
+            내가쏜다
+          </div>
+        )}
+      </Button>
+      {error && <span className="text-red-500 text-sm text-center">{error}</span>}
     </form>
   )
 } 

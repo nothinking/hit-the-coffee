@@ -20,36 +20,69 @@ export default async function CoffeeShopListPage() {
   }
 
   return (
-    <main className="container mx-auto p-4">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">매장 목록</h1>
+          <p className="text-lg text-gray-600">원하는 매장을 선택해서 주문 세션을 시작하세요! 🎯</p>
+        </div>
 
-      {coffeeShops && coffeeShops.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {coffeeShops.map((shop) => (
-            <Card key={shop.id}>
-              <CardHeader>
-                <CardTitle>
-                  <Link href={`/shop/${shop.id}`} className="hover:underline">
-                    {shop.name}
-                  </Link>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {shop.address && <p className="text-sm text-gray-500 mb-2">{shop.address}</p>}
-                <div className="flex flex-col gap-2">
-                  <StartNewOrderForm shopId={shop.id} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-lg text-gray-600 mb-4">No coffee shops registered yet.</p>
-          <Button asChild>
-            <Link href="/register-shop">Register Your First Coffee Shop</Link>
-          </Button>
-        </div>
-      )}
+        {coffeeShops && coffeeShops.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {coffeeShops.map((shop) => (
+              <Card key={shop.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <Link href={`/shop/${shop.id}`} className="hover:underline">
+                        {shop.name}
+                      </Link>
+                    </CardTitle>
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  </div>
+                  {shop.address && (
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="text-blue-500">📍</span>
+                      {shop.address}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-3">빠른 주문 세션 시작</p>
+                    </div>
+                    <StartNewOrderForm shopId={shop.id} />
+                    <div className="text-center">
+                      <Link 
+                        href={`/shop/${shop.id}`}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        매장 관리하기 →
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">☕</span>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">등록된 매장이 없습니다</h2>
+            <p className="text-lg text-gray-600 mb-8">첫 번째 매장을 등록하고 주문 시스템을 시작해보세요!</p>
+            <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+              <Link href="/register-shop">
+                <span className="mr-2">🚀</span>
+                첫 번째 매장 등록하기
+              </Link>
+            </Button>
+          </div>
+        )}
+      </div>
     </main>
   )
 }
