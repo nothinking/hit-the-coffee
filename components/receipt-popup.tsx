@@ -59,7 +59,7 @@ export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: Receipt
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0 max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">영수증</h3>
+              <h3 className="text-lg font-bold text-gray-900">주문서</h3>
               <Button
                 onClick={() => setShowPopup(false)}
                 variant="ghost"

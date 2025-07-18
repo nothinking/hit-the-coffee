@@ -19,7 +19,7 @@ export default function Home() {
             <span className="text-blue-600 block">더 즐겁고 편리해요</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            매장 등록 없이도 메뉴판만 촬영하면 바로 주문 링크를 생성할 수 있는 
+            메뉴판만 촬영하면 바로 주문 링크를 생성할 수 있는 
             실시간 주문 취합 서비스입니다.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -130,6 +130,63 @@ export default function Home() {
               </CardDescription>
             </CardHeader>
           </Card>
+        </div>
+      </section>
+
+      {/* Receipt Preview Section */}
+      <section className="container mx-auto px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left">
+              <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                주문 취합이 이렇게 편리해요
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                팀원들의 주문이 실시간으로 취합되어 마치 주문서처럼 깔끔하게 정리됩니다. 
+                누가 무엇을 주문했는지 한눈에 확인하고, 총 금액까지 자동으로 계산해드려요.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    ✓
+                  </div>
+                  <span className="text-gray-700">실시간 주문 현황 확인</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    ✓
+                  </div>
+                  <span className="text-gray-700">개인별 주문 내역 정리</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    ✓
+                  </div>
+                  <span className="text-gray-700">자동 총액 계산</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                    ✓
+                  </div>
+                  <span className="text-gray-700">주문서 형태로 출력 가능</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative">
+                <div className="bg-white rounded-lg shadow-2xl p-6 max-w-sm">
+                  <img 
+                    src="/receipt.png" 
+                    alt="주문 취합 주문서 예시" 
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
+                <div className="absolute -top-4 -right-4 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                  실시간 업데이트
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
