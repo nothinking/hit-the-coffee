@@ -479,8 +479,8 @@ export default function RegisterShopPage() {
 
       {/* Camera Modal */}
       {showCamera && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative bg-white rounded-lg p-4 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
             <div className="text-center mb-4">
               <h3 className="text-lg font-semibold">메뉴판 촬영</h3>
               <p className="text-sm text-gray-600">메뉴판이 잘 보이도록 촬영해주세요</p>
