@@ -71,6 +71,8 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
   const [voiceText, setVoiceText] = useState("")
   const [voiceError, setVoiceError] = useState<string | null>(null)
   const [recognition, setRecognition] = useState<any>(null)
+  const [lastFinalTranscript, setLastFinalTranscript] = useState("")
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null)
 
   // 음성 인식 지원 확인
   useEffect(() => {
@@ -79,6 +81,15 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
       setIsVoiceSupported(!!SpeechRecognition)
     }
   }, [])
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer)
+      }
+    }
+  }, [debounceTimer])
 
   // 음성 인식 시작
   const startVoiceRecognition = () => {
@@ -96,13 +107,20 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
       const recognitionInstance = new SpeechRecognition()
       
       recognitionInstance.continuous = true
-      recognitionInstance.interimResults = true
+      recognitionInstance.interimResults = false // 모바일에서 중복 방지를 위해 false로 설정
       recognitionInstance.lang = 'ko-KR'
+      recognitionInstance.maxAlternatives = 1 // 대안 결과 수를 1개로 제한
       
       recognitionInstance.onstart = () => {
         setIsListening(true)
         setVoiceText("")
         setVoiceError(null)
+        setLastFinalTranscript("")
+        // 기존 타이머 정리
+        if (debounceTimer) {
+          clearTimeout(debounceTimer)
+          setDebounceTimer(null)
+        }
         toast({
           title: "음성 인식 시작",
           description: "이제 말씀해주세요!",
@@ -123,7 +141,37 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
         }
         
         if (finalTranscript) {
-          setVoiceText(prev => prev + finalTranscript + "\n")
+          // 중복 방지를 위한 디바운싱 및 중복 체크
+          const normalizedFinal = finalTranscript.trim()
+          
+          // 기존 타이머가 있다면 정리
+          if (debounceTimer) {
+            clearTimeout(debounceTimer)
+          }
+          
+          // 디바운싱으로 중복 방지 (500ms)
+          const timer = setTimeout(() => {
+            // 마지막으로 추가된 텍스트와 동일한지 확인
+            if (normalizedFinal !== lastFinalTranscript && normalizedFinal.length > 0) {
+              setVoiceText(prev => {
+                // 기존 텍스트에 이미 포함되어 있는지 확인
+                const lines = prev.split('\n').filter(line => line.trim())
+                const isDuplicate = lines.some(line => 
+                  line.trim() === normalizedFinal || 
+                  normalizedFinal.includes(line.trim()) ||
+                  line.trim().includes(normalizedFinal)
+                )
+                
+                if (!isDuplicate) {
+                  setLastFinalTranscript(normalizedFinal)
+                  return prev + normalizedFinal + "\n"
+                }
+                return prev
+              })
+            }
+          }, 500)
+          
+          setDebounceTimer(timer)
         }
       }
       
@@ -179,6 +227,11 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
       try {
         recognition.stop()
         setIsListening(false)
+        // 타이머 정리
+        if (debounceTimer) {
+          clearTimeout(debounceTimer)
+          setDebounceTimer(null)
+        }
         toast({
           title: "음성 인식 중지",
           description: "음성 인식이 중지되었습니다.",
@@ -378,6 +431,12 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
     setFilePreview(null)
     setVoiceText("")
     setExtractedMenus([])
+    setLastFinalTranscript("")
+    // 타이머 정리
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+      setDebounceTimer(null)
+    }
     if (recognition) {
       recognition.stop()
     }
