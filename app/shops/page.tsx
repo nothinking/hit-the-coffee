@@ -26,22 +26,18 @@ export default async function CoffeeShopListPage() {
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       <div className="container mx-auto px-4 pt-24 pb-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <p className="text-lg text-gray-600">원하는 매장에서 쏘세요~ 🎯</p>
-          <p className="text-sm text-gray-500 mt-2">주문 취합이 편해 집니다</p>
-          
-          {/* 액션 버튼들 */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+        <div className="mb-12">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-lg text-gray-600">원하는 매장에서 쏘세요~ 🎯</p>
+              <p className="text-sm text-gray-500 mt-2">주문 취합이 편해 집니다</p>
+            </div>
+            
+            {/* 액션 버튼들 */}
             <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
               <Link href="/register-shop">
                 <span className="mr-2">🏪</span>
                 매장 등록
-              </Link>
-            </Button>
-            <Button asChild size="lg" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
-              <Link href="/register-menu">
-                <span className="mr-2">🚀</span>
-                빠른 주문
               </Link>
             </Button>
           </div>
