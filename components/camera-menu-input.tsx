@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
@@ -17,23 +17,53 @@ export function CameraMenuInput({ onMenuExtracted, onCancel }: CameraMenuInputPr
   const [showCamera, setShowCamera] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [isExtracting, setIsExtracting] = useState(false)
+  const [isStartingCamera, setIsStartingCamera] = useState(false)
   
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
+  // 컴포넌트 언마운트 시 카메라 정리
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+      }
+    }
+  }, [])
+
   // 카메라 시작
   const startCamera = async () => {
+    setIsStartingCamera(true)
     try {
+      // 기존 스트림이 있다면 정리
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current = null
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
       })
+      
       streamRef.current = stream
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        // 비디오가 로드될 때까지 기다림
+        videoRef.current.onloadedmetadata = () => {
+          setShowCamera(true)
+          setIsStartingCamera(false)
+        }
       }
-      setShowCamera(true)
     } catch (error) {
+      console.error('Camera error:', error)
+      setIsStartingCamera(false)
       toast({
         title: "카메라 접근 실패",
         description: "카메라 권한을 허용해주세요.",
@@ -47,6 +77,9 @@ export function CameraMenuInput({ onMenuExtracted, onCancel }: CameraMenuInputPr
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
     }
     setShowCamera(false)
   }
@@ -147,9 +180,22 @@ export function CameraMenuInput({ onMenuExtracted, onCancel }: CameraMenuInputPr
             <p className="text-sm text-muted-foreground">
               메뉴판을 촬영하여 메뉴 정보를 자동으로 추출합니다
             </p>
-            <Button onClick={startCamera} className="w-full">
-              <Camera className="w-4 h-4 mr-2" />
-              카메라 시작
+            <Button 
+              onClick={startCamera} 
+              className="w-full"
+              disabled={isStartingCamera}
+            >
+              {isStartingCamera ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  카메라 시작 중...
+                </>
+              ) : (
+                <>
+                  <Camera className="w-4 h-4 mr-2" />
+                  카메라 시작
+                </>
+              )}
             </Button>
           </div>
         )}
@@ -161,9 +207,17 @@ export function CameraMenuInput({ onMenuExtracted, onCancel }: CameraMenuInputPr
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="w-full rounded-lg"
+                muted
+                className="w-full h-64 object-cover rounded-lg bg-black"
+                style={{ minHeight: '256px' }}
+                onError={(e) => console.error('Video error:', e)}
+                onLoadStart={() => console.log('Video loading started')}
+                onLoadedData={() => console.log('Video data loaded')}
               />
               <canvas ref={canvasRef} className="hidden" />
+              <div className="absolute top-2 left-2 bg-black/50 text-white px-2 py-1 rounded text-xs">
+                카메라 활성화됨
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={capturePhoto} className="flex-1">
