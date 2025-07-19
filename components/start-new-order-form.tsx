@@ -89,7 +89,7 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
       const res = await fetch("/api/start-new-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shopId, title: finalTitle, expires_at: expiresAt })
+        body: JSON.stringify({ shopId, title: finalTitle, expiresInMinutes: minutes })
       })
       const data = await res.json()
       if (!data.success) setError(data.message)

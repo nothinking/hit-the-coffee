@@ -29,9 +29,10 @@ interface OrderSessionCardProps {
     menu_item_id: string
     menu_items: { name: string; price: number } // Joined data
   }>
+  onOrderDeleted?: () => void // 주문 삭제 후 콜백
 }
 
-export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessionCardProps) {
+export function OrderSessionCard({ shopId, order, orderSelections, onOrderDeleted }: OrderSessionCardProps) {
   const { toast } = useToast()
   const router = useRouter()
   const [loadingTerminate, setLoadingTerminate] = React.useState(false)
@@ -84,9 +85,20 @@ export function OrderSessionCard({ shopId, order, orderSelections }: OrderSessio
     setLoadingDelete(true)
     const result = await deleteOrderSession(shopId, order.id)
     if (result.success) {
-      router.refresh()
+      toast({
+        title: "주문 세션 삭제 완료",
+        description: "주문 세션이 삭제되었습니다."
+      })
+      // 부모 컴포넌트에 삭제 완료 알림
+      if (onOrderDeleted) {
+        onOrderDeleted()
+      }
     } else {
-      alert(result.message)
+      toast({
+        title: "주문 세션 삭제 실패",
+        description: result.message,
+        variant: "destructive"
+      })
     }
     setLoadingDelete(false)
   }

@@ -17,7 +17,8 @@ import {
   Loader2,
   CheckCircle,
   X,
-  Camera
+  Camera,
+  Plus
 } from "lucide-react"
 
 interface MenuItem {
@@ -31,6 +32,8 @@ type InputMethod = 'camera' | 'text' | 'voice' | 'file' | null
 interface MenuInputFormProps {
   onMenusExtracted: (menus: MenuItem[]) => void
   onReset?: () => void
+  shopId?: string // 매장 ID가 있으면 해당 매장에 메뉴 추가
+  onMenusAdded?: (menus: MenuItem[]) => void // 매장에 메뉴 추가 완료 콜백
 }
 
 // Web Speech API 타입 정의
@@ -45,13 +48,14 @@ interface SpeechRecognition extends EventTarget {
   onend: (() => void) | null
 }
 
-export function MenuInputForm({ onMenusExtracted, onReset }: MenuInputFormProps) {
+export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded }: MenuInputFormProps) {
   const { toast } = useToast()
   const isMobile = useIsMobile()
   
   const [inputMethod, setInputMethod] = useState<InputMethod>(null)
   const [isExtracting, setIsExtracting] = useState(false)
   const [extractedMenus, setExtractedMenus] = useState<MenuItem[]>([])
+  const [isAddingToShop, setIsAddingToShop] = useState(false)
   
   // 텍스트 입력
   const [textInput, setTextInput] = useState("")
@@ -261,12 +265,59 @@ export function MenuInputForm({ onMenusExtracted, onReset }: MenuInputFormProps)
     }
   }
 
+  // 매장에 메뉴 추가
+  const addMenusToShop = async () => {
+    if (!shopId || extractedMenus.length === 0) return
+
+    setIsAddingToShop(true)
+
+    try {
+      const response = await fetch("/api/menu/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shopId: shopId,
+          menus: extractedMenus.map(menu => ({
+            name: menu.name,
+            description: menu.description || '',
+            price: menu.price || '0'
+          }))
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error('메뉴 추가에 실패했습니다.')
+      }
+
+      toast({
+        title: "메뉴 추가 완료",
+        description: `${extractedMenus.length}개의 메뉴가 매장에 추가되었습니다.`
+      })
+
+      if (onMenusAdded) {
+        onMenusAdded(extractedMenus)
+      }
+
+      // 성공 후 초기화
+      resetInputMethod()
+    } catch (error: any) {
+      toast({
+        title: "메뉴 추가 실패",
+        description: error.message || "메뉴 추가 중 오류가 발생했습니다.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsAddingToShop(false)
+    }
+  }
+
   const resetInputMethod = () => {
     setInputMethod(null)
     setTextInput("")
     setUploadedFile(null)
     setFilePreview(null)
     setVoiceText("")
+    setExtractedMenus([])
     if (recognition) {
       recognition.stop()
     }
@@ -282,9 +333,14 @@ export function MenuInputForm({ onMenusExtracted, onReset }: MenuInputFormProps)
       {!inputMethod && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-center">메뉴 입력 방법 선택</CardTitle>
+            <CardTitle className="text-center">
+              {shopId ? "스마트 메뉴 추가" : "메뉴 입력 방법 선택"}
+            </CardTitle>
             <p className="text-sm text-muted-foreground text-center">
-              메뉴판을 입력하고 바로 주문 링크를 생성할 수 있습니다
+              {shopId 
+                ? "메뉴판을 입력하고 매장에 바로 추가할 수 있습니다"
+                : "메뉴판을 입력하고 바로 주문 링크를 생성할 수 있습니다"
+              }
             </p>
           </CardHeader>
           <CardContent>
@@ -611,6 +667,25 @@ export function MenuInputForm({ onMenusExtracted, onReset }: MenuInputFormProps)
             </div>
             
             <div className="mt-4 flex gap-2">
+              {shopId ? (
+                <Button 
+                  onClick={addMenusToShop} 
+                  className="flex-1" 
+                  disabled={isAddingToShop}
+                >
+                  {isAddingToShop ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      매장에 추가 중...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      매장에 메뉴 추가
+                    </>
+                  )}
+                </Button>
+              ) : null}
               <Button onClick={resetInputMethod} variant="outline" className="flex-1">
                 다시 입력
               </Button>
