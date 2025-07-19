@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { MenuInputForm } from "@/components/menu-input-form"
-import { ArrowLeft } from "lucide-react"
 import { createPortal } from "react-dom"
 
 interface MenuItem {
@@ -133,15 +132,6 @@ export default function RegisterMenuPage() {
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
       {/* 헤더 */}
       <div className="mb-8">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          뒤로 가기
-        </Button>
-        
         <div>
           <h1 className="text-3xl font-bold">🚀 빠른 주문</h1>
           <p className="text-muted-foreground mt-2">
