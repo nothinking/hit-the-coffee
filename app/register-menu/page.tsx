@@ -139,7 +139,7 @@ export default function RegisterMenuPage() {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
-    // capture 속성 제거 - 카메라 앱에서 갤러리 선택 옵션도 제공
+    input.capture = 'environment' // 카메라 앱이 먼저 나오도록 설정
     
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
@@ -379,7 +379,7 @@ export default function RegisterMenuPage() {
                    <Camera className="w-6 h-6" />
                    <div className="text-left">
                      <div className="font-medium">카메라 촬영</div>
-                     <div className="text-sm text-muted-foreground">카메라로 촬영하거나 갤러리에서 선택</div>
+                     <div className="text-sm text-muted-foreground">카메라로 메뉴판 촬영</div>
                    </div>
                  </Button>
                )}
