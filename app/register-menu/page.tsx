@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { 
   ArrowLeft, 
   Edit3, 
@@ -18,7 +19,8 @@ import {
   MicOff,
   Loader2,
   CheckCircle,
-  X
+  X,
+  Camera
 } from "lucide-react"
 
 interface MenuItem {
@@ -32,6 +34,7 @@ type InputMethod = 'text' | 'file' | 'voice' | null
 export default function RegisterMenuPage() {
   const router = useRouter()
   const { toast } = useToast()
+  const isMobile = useIsMobile()
   
   const [inputMethod, setInputMethod] = useState<InputMethod>(null)
   const [isExtracting, setIsExtracting] = useState(false)
@@ -129,6 +132,29 @@ export default function RegisterMenuPage() {
     if (fileInput) {
       fileInput.value = ''
     }
+  }
+
+  // 모바일 카메라 촬영
+  const openCamera = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.capture = 'environment' // 후면 카메라 사용
+    
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        setUploadedFile(file)
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
+        setInputMethod('file')
+      }
+    }
+    
+    input.click()
   }
 
   // 메뉴 추출
@@ -334,55 +360,69 @@ export default function RegisterMenuPage() {
         </div>
       </div>
 
-      {/* 입력 방법 선택 */}
-      {!inputMethod && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-center">메뉴 입력 방법 선택</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 gap-4">
-              <Button
-                onClick={() => setInputMethod('text')}
-                className="h-16 flex items-center justify-start gap-4"
-                variant="outline"
-              >
-                <Edit3 className="w-6 h-6" />
-                <div className="text-left">
-                  <div className="font-medium">텍스트 입력</div>
-                  <div className="text-sm text-muted-foreground">메뉴 정보를 직접 입력</div>
-                </div>
-              </Button>
-              
-              <Button
-                onClick={() => setInputMethod('file')}
-                className="h-16 flex items-center justify-start gap-4"
-                variant="outline"
-              >
-                <Upload className="w-6 h-6" />
-                <div className="text-left">
-                  <div className="font-medium">파일 업로드</div>
-                  <div className="text-sm text-muted-foreground">메뉴판 이미지 업로드</div>
-                </div>
-              </Button>
-              
-              {isVoiceSupported && (
-                <Button
-                  onClick={() => setInputMethod('voice')}
-                  className="h-16 flex items-center justify-start gap-4"
-                  variant="outline"
-                >
-                  <Mic className="w-6 h-6" />
-                  <div className="text-left">
-                    <div className="font-medium">음성 입력</div>
-                    <div className="text-sm text-muted-foreground">음성으로 메뉴 정보 입력</div>
-                  </div>
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+             {/* 입력 방법 선택 */}
+       {!inputMethod && (
+         <Card>
+           <CardHeader>
+             <CardTitle className="text-center">메뉴 입력 방법 선택</CardTitle>
+           </CardHeader>
+           <CardContent>
+             <div className="grid grid-cols-1 gap-4">
+               {isMobile && (
+                 <Button
+                   onClick={openCamera}
+                   className="h-16 flex items-center justify-start gap-4"
+                   variant="outline"
+                 >
+                   <Camera className="w-6 h-6" />
+                   <div className="text-left">
+                     <div className="font-medium">카메라 촬영</div>
+                     <div className="text-sm text-muted-foreground">카메라로 메뉴판 촬영</div>
+                   </div>
+                 </Button>
+               )}
+               
+               <Button
+                 onClick={() => setInputMethod('text')}
+                 className="h-16 flex items-center justify-start gap-4"
+                 variant="outline"
+               >
+                 <Edit3 className="w-6 h-6" />
+                 <div className="text-left">
+                   <div className="font-medium">텍스트 입력</div>
+                   <div className="text-sm text-muted-foreground">메뉴 정보를 직접 입력</div>
+                 </div>
+               </Button>
+               
+               <Button
+                 onClick={() => setInputMethod('file')}
+                 className="h-16 flex items-center justify-start gap-4"
+                 variant="outline"
+               >
+                 <Upload className="w-6 h-6" />
+                 <div className="text-left">
+                   <div className="font-medium">파일 업로드</div>
+                   <div className="text-sm text-muted-foreground">메뉴판 이미지 업로드</div>
+                 </div>
+               </Button>
+               
+               {isVoiceSupported && (
+                 <Button
+                   onClick={() => setInputMethod('voice')}
+                   className="h-16 flex items-center justify-start gap-4"
+                   variant="outline"
+                 >
+                   <Mic className="w-6 h-6" />
+                   <div className="text-left">
+                     <div className="font-medium">음성 입력</div>
+                     <div className="text-sm text-muted-foreground">음성으로 메뉴 정보 입력</div>
+                   </div>
+                 </Button>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       )}
 
       {/* 텍스트 입력 */}
       {inputMethod === 'text' && (
