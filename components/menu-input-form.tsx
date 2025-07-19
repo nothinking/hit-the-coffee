@@ -82,50 +82,110 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
 
   // 음성 인식 시작
   const startVoiceRecognition = () => {
-    if (!isVoiceSupported) return
-    
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    const recognitionInstance = new SpeechRecognition()
-    
-    recognitionInstance.continuous = true
-    recognitionInstance.interimResults = true
-    recognitionInstance.lang = 'ko-KR'
-    
-    recognitionInstance.onstart = () => {
-      setIsListening(true)
-      setVoiceText("")
+    if (!isVoiceSupported) {
+      toast({
+        title: "음성 인식 지원 안됨",
+        description: "이 브라우저는 음성 인식을 지원하지 않습니다.",
+        variant: "destructive"
+      })
+      return
     }
     
-    recognitionInstance.onresult = (event: any) => {
-      let finalTranscript = ""
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      const recognitionInstance = new SpeechRecognition()
+      
+      recognitionInstance.continuous = true
+      recognitionInstance.interimResults = true
+      recognitionInstance.lang = 'ko-KR'
+      
+      recognitionInstance.onstart = () => {
+        setIsListening(true)
+        setVoiceText("")
+        setVoiceError(null)
+        toast({
+          title: "음성 인식 시작",
+          description: "이제 말씀해주세요!",
+        })
+      }
+      
+      recognitionInstance.onresult = (event: any) => {
+        let finalTranscript = ""
+        let interimTranscript = ""
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript
+          } else {
+            interimTranscript += transcript
+          }
+        }
+        
+        if (finalTranscript) {
+          setVoiceText(prev => prev + finalTranscript + "\n")
         }
       }
-      if (finalTranscript) {
-        setVoiceText(prev => prev + finalTranscript + "\n")
+      
+      recognitionInstance.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error)
+        setIsListening(false)
+        
+        let errorMessage = "음성 인식 중 오류가 발생했습니다."
+        switch (event.error) {
+          case 'no-speech':
+            errorMessage = "음성이 감지되지 않았습니다. 다시 시도해주세요."
+            break
+          case 'audio-capture':
+            errorMessage = "마이크에 접근할 수 없습니다. 마이크 권한을 확인해주세요."
+            break
+          case 'not-allowed':
+            errorMessage = "마이크 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요."
+            break
+          case 'network':
+            errorMessage = "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요."
+            break
+          default:
+            errorMessage = `음성 인식 오류: ${event.error}`
+        }
+        
+        setVoiceError(errorMessage)
+        toast({
+          title: "음성 인식 오류",
+          description: errorMessage,
+          variant: "destructive"
+        })
       }
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false)
+      }
+      
+      setRecognition(recognitionInstance)
+      recognitionInstance.start()
+    } catch (error) {
+      console.error('Speech recognition initialization error:', error)
+      toast({
+        title: "음성 인식 초기화 실패",
+        description: "음성 인식을 시작할 수 없습니다.",
+        variant: "destructive"
+      })
     }
-    
-    recognitionInstance.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error)
-      setIsListening(false)
-    }
-    
-    recognitionInstance.onend = () => {
-      setIsListening(false)
-    }
-    
-    setRecognition(recognitionInstance)
-    recognitionInstance.start()
   }
 
   // 음성 인식 중지
   const stopVoiceRecognition = () => {
     if (recognition) {
-      recognition.stop()
-      setIsListening(false)
+      try {
+        recognition.stop()
+        setIsListening(false)
+        toast({
+          title: "음성 인식 중지",
+          description: "음성 인식이 중지되었습니다.",
+        })
+      } catch (error) {
+        console.error('Error stopping speech recognition:', error)
+      }
     }
   }
 
@@ -549,7 +609,7 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
             </div>
           </CardContent>
         </Card>
-      ) : inputMethod === 'voice' && !voiceText ? (
+      ) : inputMethod === 'voice' ? (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -600,6 +660,12 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
                   </Button>
                 </div>
               </div>
+
+              {voiceError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-700">{voiceError}</p>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label>인식된 텍스트</Label>
