@@ -134,12 +134,12 @@ export default function RegisterMenuPage() {
     }
   }
 
-  // 모바일 카메라 촬영
+  // 모바일 카메라 촬영 (갤러리 선택 옵션 포함)
   const openCamera = () => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
-    input.capture = 'environment' // 후면 카메라 사용
+    // capture 속성 제거 - 카메라 앱에서 갤러리 선택 옵션도 제공
     
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
@@ -157,51 +157,7 @@ export default function RegisterMenuPage() {
     input.click()
   }
 
-  // 모바일 갤러리 선택
-  const openGallery = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    // capture 속성 없음 - 갤러리 선택 옵션 제공
-    
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        setUploadedFile(file)
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string)
-        }
-        reader.readAsDataURL(file)
-        setInputMethod('file')
-      }
-    }
-    
-    input.click()
-  }
 
-  // 모바일 이미지 선택 (카메라/갤러리 선택 옵션)
-  const openImageSelector = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'image/*'
-    // capture 속성 없음 - 사용자가 카메라 또는 갤러리 선택 가능
-    
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
-        setUploadedFile(file)
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          setFilePreview(e.target?.result as string)
-        }
-        reader.readAsDataURL(file)
-        setInputMethod('file')
-      }
-    }
-    
-    input.click()
-  }
 
   // 메뉴 추출
   const extractMenuInfo = async () => {
@@ -415,40 +371,17 @@ export default function RegisterMenuPage() {
            <CardContent>
              <div className="grid grid-cols-1 gap-4">
                {isMobile && (
-                 <>
-                   <Button
-                     onClick={openImageSelector}
-                     className="h-16 flex items-center justify-start gap-4"
-                     variant="outline"
-                   >
-                     <Camera className="w-6 h-6" />
-                     <div className="text-left">
-                       <div className="font-medium">카메라/갤러리</div>
-                       <div className="text-sm text-muted-foreground">카메라 촬영 또는 갤러리에서 선택</div>
-                     </div>
-                   </Button>
-                   
-                   <div className="grid grid-cols-2 gap-2">
-                     <Button
-                       onClick={openCamera}
-                       className="h-12 flex items-center justify-center gap-2"
-                       variant="outline"
-                       size="sm"
-                     >
-                       <Camera className="w-4 h-4" />
-                       카메라 촬영
-                     </Button>
-                     <Button
-                       onClick={openGallery}
-                       className="h-12 flex items-center justify-center gap-2"
-                       variant="outline"
-                       size="sm"
-                     >
-                       <Upload className="w-4 h-4" />
-                       갤러리 선택
-                     </Button>
+                 <Button
+                   onClick={openCamera}
+                   className="h-16 flex items-center justify-start gap-4"
+                   variant="outline"
+                 >
+                   <Camera className="w-6 h-6" />
+                   <div className="text-left">
+                     <div className="font-medium">카메라 촬영</div>
+                     <div className="text-sm text-muted-foreground">카메라로 촬영하거나 갤러리에서 선택</div>
                    </div>
-                 </>
+                 </Button>
                )}
                
                <Button
