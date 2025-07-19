@@ -24,18 +24,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/quick-order">
-                🚀 빠른 주문 링크 생성
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
               <Link href="/register-shop">
                 매장 등록하기
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/register-menu">
-                메뉴판 등록
+                🚀 빠른 주문
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
@@ -245,18 +240,13 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-              <Link href="/quick-order">
-                🚀 빠른 주문 링크 생성
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg">
               <Link href="/register-shop">
                 매장 등록하기
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/register-menu">
-                메뉴판 등록
+                🚀 빠른 주문
               </Link>
             </Button>
           </div>

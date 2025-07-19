@@ -6,7 +6,7 @@ import OrderCountdownInfoWrapper from "@/components/order-countdown-info-wrapper
 import OrderSelectionDeleteButton from "@/components/OrderSelectionDeleteButton";
 import { ReceiptPopup } from "@/components/receipt-popup";
 import { ShareSessionButton } from "@/components/share-session-button";
-import { ConvertTemporaryShopButton } from "@/components/convert-temporary-shop-button";
+
 import { RefreshOrderButton } from "@/components/refresh-order-button";
 import { AutoRefreshWrapper } from "@/components/auto-refresh-wrapper";
 
@@ -111,14 +111,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
               />
             </div>
 
-            {/* Convert Temporary Shop Button */}
-            <div className="mt-4">
-              <ConvertTemporaryShopButton
-                shopId={coffeeShop.id}
-                shopName={coffeeShop.name}
-                isTemporary={coffeeShop.is_temporary || false}
-              />
-            </div>
+
           </div>
 
           {/* Main Content Card */}

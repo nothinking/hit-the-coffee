@@ -259,12 +259,12 @@ export default function RegisterMenuPage() {
     setIsListening(false)
   }
 
-  // 매장 등록 및 메뉴 저장
-  const saveMenus = async () => {
+  // 빠른 주문 링크 생성
+  const createQuickOrder = async () => {
     if (extractedMenus.length === 0) {
       toast({
-        title: "저장할 메뉴 없음",
-        description: "저장할 메뉴가 없습니다.",
+        title: "메뉴 없음",
+        description: "추출된 메뉴가 없습니다.",
         variant: "destructive"
       })
       return
@@ -281,29 +281,20 @@ export default function RegisterMenuPage() {
       return
     }
 
+    // 주문 제목 입력 받기 (선택사항)
+    const orderTitle = prompt("주문 제목을 입력해주세요 (선택사항):") || ""
+
+    // 주문 마감 시간 입력 받기
+    const expiresInMinutes = prompt("주문 마감 시간을 분 단위로 입력해주세요 (기본값: 30분):") || "30"
+
     try {
-      // 1. Supabase로 매장 등록
-      const supabase = createSupabaseBrowser()
-      const { data: shopData, error: shopError } = await supabase
-        .from("coffee_shops")
-        .insert({ name: shopName.trim() })
-        .select()
-        .single()
-
-      if (shopError) {
-        throw new Error(`매장 등록 실패: ${shopError.message}`)
-      }
-
-      const shopId = shopData.id
-
-      // 2. 메뉴 등록
-      const menuResponse = await fetch('/api/menu/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await fetch("/api/quick-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          shopId: shopId,
+          shopName: shopName.trim(),
+          title: orderTitle.trim(),
+          expiresInMinutes: parseInt(expiresInMinutes) || 30,
           menus: extractedMenus.map(menu => ({
             name: menu.name,
             description: menu.description || '',
@@ -312,30 +303,30 @@ export default function RegisterMenuPage() {
         })
       })
 
-      if (menuResponse.ok) {
+      const data = await response.json()
+      
+      if (!data.success) {
         toast({
-          title: "등록 완료",
-          description: `${shopName} 매장과 ${extractedMenus.length}개의 메뉴가 성공적으로 등록되었습니다.`
-        })
-        
-        // 저장 후 상태 초기화
-        setExtractedMenus([])
-        resetInputMethod()
-        
-        // 매장 관리 페이지로 이동
-        router.push(`/shop/${shopId}`)
-      } else {
-        const error = await menuResponse.json()
-        toast({
-          title: "메뉴 저장 실패",
-          description: error.message || "메뉴 저장 중 오류가 발생했습니다.",
+          title: "주문 링크 생성 실패",
+          description: data.message || "주문 링크 생성 중 오류가 발생했습니다.",
           variant: "destructive"
         })
+        return
+      }
+
+      toast({
+        title: "주문 링크 생성 완료!",
+        description: "주문 링크가 성공적으로 생성되었습니다."
+      })
+
+      // 주문 페이지로 바로 이동
+      if (data.shareCode) {
+        router.push(`/order/${data.shareCode}`)
       }
     } catch (error: any) {
       toast({
-        title: "등록 오류",
-        description: error.message || "매장 및 메뉴 등록 중 오류가 발생했습니다.",
+        title: "주문 링크 생성 오류",
+        description: error.message || "주문 링크 생성 중 오류가 발생했습니다.",
         variant: "destructive"
       })
     }
@@ -355,9 +346,9 @@ export default function RegisterMenuPage() {
         </Button>
         
         <div>
-          <h1 className="text-3xl font-bold">메뉴 등록</h1>
+          <h1 className="text-3xl font-bold">🚀 빠른 주문</h1>
           <p className="text-muted-foreground mt-2">
-            텍스트, 파일, 음성으로 메뉴를 입력하세요
+            메뉴판을 촬영하고 바로 주문 링크를 생성하세요
           </p>
         </div>
       </div>
@@ -367,6 +358,9 @@ export default function RegisterMenuPage() {
          <Card>
            <CardHeader>
              <CardTitle className="text-center">메뉴 입력 방법 선택</CardTitle>
+             <p className="text-sm text-muted-foreground text-center">
+               메뉴판을 입력하고 바로 주문 링크를 생성할 수 있습니다
+             </p>
            </CardHeader>
            <CardContent>
              <div className="grid grid-cols-1 gap-4">
@@ -667,8 +661,8 @@ export default function RegisterMenuPage() {
                <Button onClick={resetInputMethod} variant="outline" className="flex-1">
                  다시 입력
                </Button>
-               <Button onClick={saveMenus} className="flex-1">
-                 메뉴 저장
+               <Button onClick={createQuickOrder} className="flex-1">
+                 🚀 주문 링크 생성
                </Button>
              </div>
           </CardContent>

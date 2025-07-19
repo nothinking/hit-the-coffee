@@ -32,12 +32,13 @@ export function GNB() {
               </Link>
             </NavigationMenuItem>
             <NavigationMenuItem>
-              <Link href="/quick-order" legacyBehavior passHref>
+              <Link href="/register-menu" legacyBehavior passHref>
                 <NavigationMenuLink className="px-2 md:px-4 py-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-lg transition-all duration-200 font-medium border border-orange-400 hover:border-orange-500 text-sm md:text-base">
                   🚀 빠른주문
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>
+
           </NavigationMenuList>
         </NavigationMenu>
       </div>

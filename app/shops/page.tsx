@@ -19,9 +19,8 @@ export default async function CoffeeShopListPage() {
     )
   }
 
-  // 매장을 정식매장과 임시매장으로 분류
-  const permanentShops = coffeeShops?.filter(shop => !shop.is_temporary) || []
-  const temporaryShops = coffeeShops?.filter(shop => shop.is_temporary) || []
+  // 모든 매장을 표시
+  const allShops = coffeeShops || []
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
@@ -41,125 +40,50 @@ export default async function CoffeeShopListPage() {
             </Button>
             <Button asChild size="lg" className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
               <Link href="/register-menu">
-                <span className="mr-2">📸</span>
-                메뉴판 등록
+                <span className="mr-2">🚀</span>
+                빠른 주문
               </Link>
             </Button>
           </div>
         </div>
 
-        {coffeeShops && coffeeShops.length > 0 ? (
-          <div className="space-y-12">
-            {/* 정식 매장 섹션 */}
-            {permanentShops.length > 0 && (
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">🏪</span>
+        {allShops && allShops.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {allShops.map((shop) => (
+              <Card key={shop.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm border-l-4 border-l-blue-500">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <Link href={`/shop/${shop.id}`} className="hover:underline">
+                        {shop.name}
+                      </Link>
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">정식 등록 매장</h2>
-                  <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                    {permanentShops.length}개
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {permanentShops.map((shop) => (
-                    <Card key={shop.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm border-l-4 border-l-blue-500">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            <Link href={`/shop/${shop.id}`} className="hover:underline">
-                              {shop.name}
-                            </Link>
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                              정식
-                            </span>
-                          </div>
-                        </div>
-                        {shop.address && (
-                          <p className="text-sm text-gray-600 flex items-center gap-2">
-                            <span className="text-blue-500">📍</span>
-                            {shop.address}
-                          </p>
-                        )}
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="space-y-4">
-                          <StartNewOrderForm shopId={shop.id} shopName={shop.name} />
-                          <div className="text-center">
-                            <Link 
-                              href={`/shop/${shop.id}`}
-                              className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                            >
-                              매장 관리하기 →
-                            </Link>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 임시 매장 섹션 */}
-            {temporaryShops.length > 0 && (
-              <div>
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-bold">⚡</span>
+                  {shop.address && (
+                    <p className="text-sm text-gray-600 flex items-center gap-2">
+                      <span className="text-blue-500">📍</span>
+                      {shop.address}
+                    </p>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-4">
+                    <StartNewOrderForm shopId={shop.id} shopName={shop.name} />
+                    <div className="text-center">
+                      <Link 
+                        href={`/shop/${shop.id}`}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                      >
+                        매장 관리하기 →
+                      </Link>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900">임시 매장</h2>
-                  <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
-                    {temporaryShops.length}개
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {temporaryShops.map((shop) => (
-                    <Card key={shop.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm border-l-4 border-l-orange-500">
-                      <CardHeader className="pb-4">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
-                            <Link href={`/shop/${shop.id}`} className="hover:underline">
-                              {shop.name}
-                            </Link>
-                          </CardTitle>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-                            <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                              임시
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-500 flex items-center gap-2">
-                          <span className="text-orange-500">⚡</span>
-                          빠른 주문으로 생성된 임시 매장
-                        </p>
-                      </CardHeader>
-                      <CardContent className="pt-0">
-                        <div className="space-y-4">
-                          <StartNewOrderForm shopId={shop.id} shopName={shop.name} />
-                          <div className="text-center space-y-2">
-                            <Link 
-                              href={`/shop/${shop.id}`}
-                              className="text-sm text-orange-600 hover:text-orange-800 font-medium transition-colors block"
-                            >
-                              주문 링크 보기 →
-                            </Link>
-                            <p className="text-xs text-gray-500">
-                              정식 등록하려면 주문 페이지에서 "정식 매장으로 등록" 버튼을 클릭하세요
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="text-center py-16">

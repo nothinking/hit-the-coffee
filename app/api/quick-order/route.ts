@@ -24,19 +24,18 @@ export async function POST(req: NextRequest) {
 
     const supabase = await createSupabaseServer();
 
-    // 1. Create temporary coffee shop
+    // 1. Create coffee shop
     const { data: shop, error: shopError } = await supabase
       .from("coffee_shops")
       .insert({
         name: shopName,
-        is_temporary: true,
         address: null
       })
       .select()
       .single();
 
     if (shopError) {
-      console.error("Error creating temporary shop:", shopError);
+      console.error("Error creating shop:", shopError);
       return NextResponse.json({ 
         success: false, 
         message: shopError.message 
