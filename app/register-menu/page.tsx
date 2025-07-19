@@ -503,77 +503,90 @@ export default function RegisterMenuPage() {
         </Card>
       )}
 
-      {/* 음성 입력 */}
-      {inputMethod === 'voice' && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>음성 입력</CardTitle>
-              <Button variant="ghost" size="sm" onClick={resetInputMethod}>
-                다른 방법 선택
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-4">
-              <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  음성으로 메뉴 정보를 입력하세요
-                </p>
-                <div className="flex justify-center gap-2">
-                  <Button
-                    onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
-                    variant={isListening ? "destructive" : "default"}
-                    size="lg"
-                  >
-                    {isListening ? (
-                      <>
-                        <MicOff className="w-4 h-4 mr-2" />
-                        음성 인식 중지
-                      </>
-                    ) : (
-                      <>
-                        <Mic className="w-4 h-4 mr-2" />
-                        음성 인식 시작
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
+             {/* 음성 입력 */}
+       {inputMethod === 'voice' && (
+         <Card>
+           <CardHeader>
+             <div className="flex items-center justify-between">
+               <CardTitle>음성 입력</CardTitle>
+               <Button variant="ghost" size="sm" onClick={resetInputMethod}>
+                 다른 방법 선택
+               </Button>
+             </div>
+           </CardHeader>
+           <CardContent className="space-y-4">
+             <div className="space-y-4">
+               <div className="text-center space-y-4">
+                 <p className="text-sm text-muted-foreground">
+                   음성으로 메뉴 정보를 입력하세요
+                 </p>
+                 
+                 {/* 음성 인식 상태 표시 */}
+                 {isListening && (
+                   <div className="flex items-center justify-center gap-2 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                     <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                     <span className="text-sm font-medium text-blue-700">음성 인식 중...</span>
+                     <div className="flex gap-1">
+                       <div className="w-1 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                       <div className="w-1 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                       <div className="w-1 h-3 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                     </div>
+                   </div>
+                 )}
+                 
+                 <div className="flex justify-center gap-2">
+                   <Button
+                     onClick={isListening ? stopVoiceRecognition : startVoiceRecognition}
+                     variant={isListening ? "destructive" : "default"}
+                     size="lg"
+                     className={isListening ? "animate-pulse" : ""}
+                   >
+                     {isListening ? (
+                       <>
+                         <MicOff className="w-4 h-4 mr-2" />
+                         음성 인식 중지
+                       </>
+                     ) : (
+                       <>
+                         <Mic className="w-4 h-4 mr-2" />
+                         음성 인식 시작
+                       </>
+                     )}
+                   </Button>
+                 </div>
+               </div>
 
-              {voiceText && (
-                <div className="space-y-2">
-                  <Label>인식된 텍스트</Label>
-                  <Textarea
-                    value={voiceText}
-                    onChange={(e) => setVoiceText(e.target.value)}
-                    rows={6}
-                    className="w-full"
-                    placeholder="음성 인식 결과가 여기에 표시됩니다..."
-                  />
-                </div>
-              )}
+               <div className="space-y-2">
+                 <Label>인식된 텍스트</Label>
+                 <Textarea
+                   value={voiceText}
+                   onChange={(e) => setVoiceText(e.target.value)}
+                   rows={6}
+                   className="w-full"
+                   placeholder="음성 인식 시작 버튼을 누르면 여기에 텍스트가 나타납니다..."
+                 />
+               </div>
 
-              {voiceText.trim() && (
-                <Button 
-                  onClick={extractMenuInfo} 
-                  className="w-full" 
-                  disabled={isExtracting}
-                >
-                  {isExtracting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      추출 중...
-                    </>
-                  ) : (
-                    '메뉴 추출하기'
-                  )}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+               {voiceText.trim() && (
+                 <Button 
+                   onClick={extractMenuInfo} 
+                   className="w-full" 
+                   disabled={isExtracting}
+                 >
+                   {isExtracting ? (
+                     <>
+                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                       추출 중...
+                     </>
+                   ) : (
+                     '메뉴 추출하기'
+                   )}
+                 </Button>
+               )}
+             </div>
+           </CardContent>
+         </Card>
+       )}
 
       {/* 추출된 메뉴 결과 */}
       {extractedMenus.length > 0 && (

@@ -106,19 +106,64 @@ export async function POST(request: NextRequest) {
     }
 
     if (textInput) {
-      // 규칙 기반 텍스트 파싱
-      const menus = parseMenuFromText(textInput)
-      
-      if (menus.length === 0) {
-        return NextResponse.json(
-          { success: false, message: "메뉴를 추출할 수 없습니다. 입력 형식을 확인해주세요." },
-          { status: 400 }
-        )
+      // Gemini API를 사용한 텍스트 파싱
+      const apiKey = process.env.GEMINI_API_KEY
+      if (!apiKey) {
+        return NextResponse.json({ success: false, message: "API key not set." }, { status: 500 })
       }
+
+      const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+      
+      const prompt = `다음은 음성 인식으로 입력된 메뉴 정보입니다. 메뉴 정보를 추출하여 JSON 배열로 반환해주세요. 각 메뉴는 name, description, price 필드를 가져야 합니다.
+
+입력 텍스트:
+${textInput}
+
+응답 형식:
+[
+  {
+    "name": "메뉴명",
+    "description": "메뉴 설명", 
+    "price": "가격"
+  }
+]
+
+주의사항:
+- 가격은 숫자만 포함하세요 (예: "4500" 또는 "4,500")
+- 설명이 없는 경우 빈 문자열로 설정하세요
+- 메뉴가 아닌 텍스트는 제외하세요
+- JSON 형식만 반환하세요
+- 음성 인식 오류로 인한 잘못된 텍스트는 수정해서 반환하세요`
+
+      const body = {
+        contents: [{
+          parts: [
+            {
+              text: prompt,
+            },
+          ],
+        }]
+      }
+
+      const response = await fetch(`${endpoint}?key=${apiKey}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        return NextResponse.json({ success: false, message: error.error?.message || "Gemini API error" }, { status: 500 })
+      }
+
+      const result = await response.json()
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text || ""
 
       return NextResponse.json({
         success: true,
-        text: JSON.stringify(menus, null, 2)
+        text: text
       })
     }
 
