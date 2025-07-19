@@ -254,81 +254,79 @@ export default function RegisterMenuPage() {
   }
 
   // Camera functions
-  async function startCamera() {
-    try {
-      // 먼저 카메라 권한 확인
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("이 브라우저는 카메라를 지원하지 않습니다.")
-      }
-
-      // 카메라 설정 - 더 유연한 설정으로 변경
-      const constraints = {
-        video: {
-          facingMode: { ideal: 'environment' }, // 후면 카메라 우선
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 }
+  function openCameraApp() {
+    // 모바일에서 카메라 앱 열기
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // 카메라 권한 요청 후 카메라 앱 열기
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(() => {
+          // 권한이 허용되면 카메라 앱 열기 시도
+          if ('mediaDevices' in navigator && 'getDisplayMedia' in navigator.mediaDevices) {
+            // 카메라 앱 열기 시도
+            window.open('camera://', '_blank')
+          } else {
+            // 대안: 파일 선택으로 카메라 앱 열기
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = 'image/*'
+            input.capture = 'environment'
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0]
+              if (file) {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                  setCapturedImage(e.target?.result as string)
+                  setInputMethod('camera')
+                }
+                reader.readAsDataURL(file)
+              }
+            }
+            input.click()
+          }
+        })
+        .catch((err) => {
+          console.error("카메라 권한 오류:", err)
+          // 권한이 거부되면 파일 선택으로 대체
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = 'image/*'
+          input.capture = 'environment'
+          input.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0]
+            if (file) {
+              const reader = new FileReader()
+              reader.onload = (e) => {
+                setCapturedImage(e.target?.result as string)
+                setInputMethod('camera')
+              }
+              reader.readAsDataURL(file)
+            }
+          }
+          input.click()
+        })
+    } else {
+      // 브라우저가 카메라를 지원하지 않으면 파일 선택
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*'
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0]
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            setCapturedImage(e.target?.result as string)
+            setInputMethod('camera')
+          }
+          reader.readAsDataURL(file)
         }
       }
-      
-      // 카메라 스트림 요청
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        
-        // 비디오 로드 완료 대기
-        videoRef.current.onloadedmetadata = () => {
-          console.log("카메라가 성공적으로 시작되었습니다.")
-          console.log("비디오 크기:", videoRef.current?.videoWidth, "x", videoRef.current?.videoHeight)
-        }
-        
-        videoRef.current.oncanplay = () => {
-          console.log("비디오 재생 준비 완료")
-        }
-        
-        videoRef.current.onplay = () => {
-          console.log("비디오 재생 시작")
-        }
-        
-        videoRef.current.onerror = (error) => {
-          console.error("비디오 로드 오류:", error)
-          toast({
-            title: "카메라 오류",
-            description: "카메라 스트림을 로드할 수 없습니다.",
-            variant: "destructive"
-          })
-        }
-      }
-      
-      setShowCamera(true)
-      
-      toast({
-        title: "카메라 시작",
-        description: "카메라가 성공적으로 시작되었습니다."
-      })
-      
-    } catch (err: any) {
-      console.error("Camera error:", err)
-      
-      let errorMessage = "카메라에 접근할 수 없습니다."
-      
-      if (err.name === 'NotAllowedError') {
-        errorMessage = "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요."
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = "카메라를 찾을 수 없습니다. 카메라가 연결되어 있는지 확인해주세요."
-      } else if (err.name === 'NotReadableError') {
-        errorMessage = "카메라가 다른 앱에서 사용 중입니다. 다른 앱을 종료하고 다시 시도해주세요."
-      } else if (err.name === 'OverconstrainedError') {
-        errorMessage = "지원되지 않는 카메라 설정입니다. 다른 카메라를 시도해보세요."
-      }
-      
-      toast({
-        title: "카메라 오류",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      input.click()
     }
+  }
+
+  async function startCamera() {
+    // 기존 카메라 함수는 유지하되, 기본적으로는 카메라 앱 열기 사용
+    openCameraApp()
   }
 
   function stopCamera() {
@@ -1121,88 +1119,7 @@ export default function RegisterMenuPage() {
         </CardContent>
       </Card>
 
-      {/* Camera Modal */}
-      {showCamera && mounted && createPortal(
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-          <div className="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
-            <div className="text-center mb-4">
-              <h3 className="text-lg font-semibold">메뉴판 촬영</h3>
-              <p className="text-sm text-gray-600">메뉴판이 잘 보이도록 촬영해주세요</p>
-            </div>
-            
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full rounded-lg bg-gray-900"
-                style={{ 
-                  minHeight: '300px',
-                  objectFit: 'cover',
-                  width: '100%',
-                  height: 'auto'
-                }}
-              />
-              <canvas ref={canvasRef} className="hidden" />
-              
-              {/* 촬영 가이드 */}
-              <div className="absolute inset-0 border-2 border-white border-dashed rounded-lg m-2 pointer-events-none">
-                <div className="absolute top-2 left-2 text-white text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
-                  메뉴판 영역
-                </div>
-              </div>
-              
-              {/* 카메라 로딩 상태 표시 */}
-              {videoRef.current && (!videoRef.current.readyState || videoRef.current.readyState < 2) && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 rounded-lg">
-                  <div className="text-center text-white">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-                    <p className="text-sm">카메라를 시작하는 중...</p>
-                    <p className="text-xs text-gray-300 mt-1">잠시만 기다려주세요</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* 비디오가 로드되지 않았을 때 대체 UI */}
-              {videoRef.current && videoRef.current.readyState >= 2 && !videoRef.current.videoWidth && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 rounded-lg">
-                  <div className="text-center text-white">
-                    <Camera className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm">카메라 스트림을 불러오는 중...</p>
-                    <p className="text-xs text-gray-300 mt-1">권한을 확인해주세요</p>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex gap-2 mt-4">
-              <Button 
-                onClick={capturePhoto} 
-                className="flex-1" 
-                size="lg"
-                disabled={!videoRef.current || videoRef.current.readyState < 2 || !videoRef.current.videoWidth}
-              >
-                📸 사진 촬영
-              </Button>
-              <Button 
-                onClick={() => {
-                  stopCamera()
-                  setTimeout(() => startCamera(), 500)
-                }} 
-                variant="outline" 
-                className="flex-1"
-              >
-                🔄 재시작
-              </Button>
-              <Button onClick={stopCamera} variant="outline" className="flex-1">
-                취소
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+
     </main>
   )
 } 

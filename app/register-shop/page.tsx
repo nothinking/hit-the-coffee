@@ -161,80 +161,79 @@ export default function RegisterShopPage() {
   }
 
   // Camera functions
-  async function startCamera() {
-    try {
-      // 먼저 카메라 권한 확인
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("이 브라우저는 카메라를 지원하지 않습니다.")
-      }
-
-      // 카메라 설정 - 더 유연한 설정으로 변경
-      const constraints = {
-        video: {
-          facingMode: { ideal: 'environment' }, // 후면 카메라 우선
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 }
+  function openCameraApp() {
+    // 모바일에서 카메라 앱 열기
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      // 카메라 권한 요청 후 카메라 앱 열기
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(() => {
+          // 권한이 허용되면 카메라 앱 열기 시도
+          if ('mediaDevices' in navigator && 'getDisplayMedia' in navigator.mediaDevices) {
+            // 카메라 앱 열기 시도
+            window.open('camera://', '_blank')
+          } else {
+            // 대안: 파일 선택으로 카메라 앱 열기
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = 'image/*'
+            input.capture = 'environment'
+            input.onchange = (e) => {
+              const file = (e.target as HTMLInputElement).files?.[0]
+              if (file) {
+                const reader = new FileReader()
+                reader.onload = (e) => {
+                  setCapturedImage(e.target?.result as string)
+                  setInputMethod('camera')
+                }
+                reader.readAsDataURL(file)
+              }
+            }
+            input.click()
+          }
+        })
+        .catch((err) => {
+          console.error("카메라 권한 오류:", err)
+          // 권한이 거부되면 파일 선택으로 대체
+          const input = document.createElement('input')
+          input.type = 'file'
+          input.accept = 'image/*'
+          input.capture = 'environment'
+          input.onchange = (e) => {
+            const file = (e.target as HTMLInputElement).files?.[0]
+            if (file) {
+              const reader = new FileReader()
+              reader.onload = (e) => {
+                setCapturedImage(e.target?.result as string)
+                setInputMethod('camera')
+              }
+              reader.readAsDataURL(file)
+            }
+          }
+          input.click()
+        })
+    } else {
+      // 브라우저가 카메라를 지원하지 않으면 파일 선택
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*'
+      input.onchange = (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0]
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = (e) => {
+            setCapturedImage(e.target?.result as string)
+            setInputMethod('camera')
+          }
+          reader.readAsDataURL(file)
         }
       }
-      
-      // 카메라 스트림 요청
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log("카메라 스트림 획득:", stream.getTracks().map(track => track.kind))
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        
-        // 스트림이 활성 상태인지 확인
-        const videoTrack = stream.getVideoTracks()[0]
-        if (videoTrack) {
-          console.log("비디오 트랙 설정:", videoTrack.getSettings())
-          console.log("비디오 트랙 상태:", videoTrack.readyState)
-        }
-        
-        // 비디오 로드 완료 대기
-        videoRef.current.onloadedmetadata = () => {
-          console.log("카메라가 성공적으로 시작되었습니다.")
-        }
-        
-        videoRef.current.onerror = (error) => {
-          console.error("비디오 로드 오류:", error)
-          toast({
-            title: "카메라 오류",
-            description: "카메라 스트림을 로드할 수 없습니다.",
-            variant: "destructive"
-          })
-        }
-      }
-      
-      setShowCamera(true)
-      
-      toast({
-        title: "카메라 시작",
-        description: "카메라가 성공적으로 시작되었습니다."
-      })
-      
-    } catch (err: any) {
-      console.error("Camera error:", err)
-      
-      let errorMessage = "카메라에 접근할 수 없습니다."
-      
-      if (err.name === 'NotAllowedError') {
-        errorMessage = "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 권한을 허용해주세요."
-      } else if (err.name === 'NotFoundError') {
-        errorMessage = "카메라를 찾을 수 없습니다. 카메라가 연결되어 있는지 확인해주세요."
-      } else if (err.name === 'NotReadableError') {
-        errorMessage = "카메라가 다른 앱에서 사용 중입니다. 다른 앱을 종료하고 다시 시도해주세요."
-      } else if (err.name === 'OverconstrainedError') {
-        errorMessage = "지원되지 않는 카메라 설정입니다. 다른 카메라를 시도해보세요."
-      }
-      
-      toast({
-        title: "카메라 오류",
-        description: errorMessage,
-        variant: "destructive"
-      })
+      input.click()
     }
+  }
+
+  async function startCamera() {
+    // 기존 카메라 함수는 유지하되, 기본적으로는 카메라 앱 열기 사용
+    openCameraApp()
   }
 
   function stopCamera() {
