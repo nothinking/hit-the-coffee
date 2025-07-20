@@ -9,6 +9,7 @@ import { ShareSessionButton } from "@/components/share-session-button";
 
 import { RefreshOrderButton } from "@/components/refresh-order-button";
 import { AutoRefreshWrapper } from "@/components/auto-refresh-wrapper";
+import { formatPrice } from "@/lib/utils"
 
 interface OrderPageProps {
   params: {
@@ -184,7 +185,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                                   </span>
                                 </span>
                                 <span className="text-right font-semibold text-blue-600">
-                                  {menuPrice.toFixed(2)}
+                                  {formatPrice(menuPrice)}
                                 </span>
                                 <div className="flex justify-center">
                                   <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
@@ -204,7 +205,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-semibold text-blue-600 text-lg">{menuPrice.toFixed(2)}</div>
+                                    <div className="font-semibold text-blue-600 text-lg">{formatPrice(menuPrice)}</div>
                                     <div className="text-sm text-gray-500">수량: {sel.quantity}</div>
                                   </div>
                                 </div>
@@ -229,11 +230,11 @@ export default async function OrderPage({ params }: OrderPageProps) {
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-600">총 금액:</span>
                             <span className="font-bold text-lg text-blue-600">
-                              {orderSelections.reduce((sum, sel) => {
+                              {formatPrice(orderSelections.reduce((sum, sel) => {
                                 const menuItems = sel.menu_items as any;
                                 const price = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
                                 return sum + (price * sel.quantity);
-                              }, 0).toFixed(2)}
+                              }, 0))}
                             </span>
                           </div>
                         </div>

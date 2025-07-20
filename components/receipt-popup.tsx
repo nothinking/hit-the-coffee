@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { X, Receipt } from "lucide-react"
 import { createPortal } from "react-dom"
+import { formatPrice } from "@/lib/utils"
 
 interface ReceiptPopupProps {
   mergedMenu: { name: string; price: number; quantity: number }[]
@@ -96,7 +97,7 @@ export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: Receipt
                     <div key={item.name + item.price} className="grid grid-cols-[1fr_40px_70px] gap-x-2 py-1 items-center text-sm">
                       <span className="truncate text-left">{item.name}</span>
                       <span className="text-center">{item.quantity}</span>
-                      <span className="text-right">{(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="text-right">{formatPrice(item.price * item.quantity)}</span>
                     </div>
                   ))}
                   
@@ -105,7 +106,7 @@ export function ReceiptPopup({ mergedMenu, coffeeShopName, orderTitle }: Receipt
                   {/* Total */}
                   <div className="flex justify-between font-bold text-base mb-2">
                     <span>TOTAL</span>
-                    <span>{totalAmount.toFixed(2)}</span>
+                    <span>{formatPrice(totalAmount)}</span>
                   </div>
                   
                   <div className="flex justify-end text-xs text-gray-600 mb-4">

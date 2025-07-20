@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { formatPrice } from "@/lib/utils"
 
 interface MenuItemCardProps {
   shopId: string
@@ -62,7 +63,7 @@ export function MenuItemCard({ shopId, item }: MenuItemCardProps) {
         {item.description && <CardDescription>{item.description}</CardDescription>}
       </CardHeader>
       <CardContent className="flex justify-between items-center">
-        <p className="text-lg font-semibold">{item.price.toFixed(2)}</p>
+        <p className="text-lg font-semibold">{formatPrice(item.price)}</p>
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" size="sm" disabled={loading}>

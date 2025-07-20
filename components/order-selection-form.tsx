@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { submitOrderSelections } from "@/app/order/[shareCode]/actions"
 import { X } from "lucide-react"
 import { createPortal } from "react-dom"
+import { formatPrice } from "@/lib/utils"
 
 interface MenuItem {
   id: string
@@ -201,7 +202,7 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className="font-bold text-lg text-blue-600">{item.price.toFixed(2)}</span>
+                        <span className="font-bold text-lg text-blue-600">{formatPrice(item.price)}</span>
                       </div>
                     </Card>
                   ))

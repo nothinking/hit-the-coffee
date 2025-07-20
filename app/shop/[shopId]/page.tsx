@@ -32,6 +32,7 @@ import {
   resetAllMenus, 
   addMultipleMenus 
 } from "./actions"
+import { formatPrice } from "@/lib/utils"
 
 interface MenuItem {
   id?: string
@@ -519,7 +520,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                           <h3 className="font-medium">{item.name}</h3>
                           {item.price && (
                             <span className="text-sm font-semibold text-green-600">
-                              {Number(item.price).toLocaleString()}원
+                              {formatPrice(item.price)}
                             </span>
                           )}
                         </div>

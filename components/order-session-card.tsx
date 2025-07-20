@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { formatPrice } from "@/lib/utils"
 
 interface OrderSessionCardProps {
   shopId: string
@@ -248,7 +249,7 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between px-4">
                 <span className="font-semibold">
-                  View Selections ({totalSelectionsCount} items, {totalOrderPrice.toFixed(2)})
+                  View Selections ({totalSelectionsCount} items, {formatPrice(totalOrderPrice)})
                 </span>
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -261,8 +262,7 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
                     {selections.map((selection) => (
                       <li key={selection.id} className="flex justify-between items-center text-sm">
                         <span>
-                          {selection.quantity}x {selection.menu_items.name} ({selection.menu_items.price.toFixed(2)}{" "}
-                          each)
+                          {selection.quantity}x {selection.menu_items.name} ({formatPrice(selection.menu_items.price)} each)
                         </span>
                         <Button
                           variant="ghost"
