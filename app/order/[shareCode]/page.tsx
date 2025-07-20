@@ -9,7 +9,7 @@ import { ShareSessionButton } from "@/components/share-session-button";
 
 import { RefreshOrderButton } from "@/components/refresh-order-button";
 import { AutoRefreshWrapper } from "@/components/auto-refresh-wrapper";
-import { formatPrice } from "@/lib/utils"
+
 
 interface OrderPageProps {
   params: {
@@ -153,11 +153,10 @@ export default async function OrderPage({ params }: OrderPageProps) {
                   {orderSelections && orderSelections.length > 0 ? (
                     <>
                       {/* Table Header */}
-                      <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
+                      <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_50px] gap-x-4 font-semibold text-gray-700 mb-4 pb-3 border-b border-gray-200">
                         <span className="text-sm">참여자</span>
                         <span className="text-sm">메뉴</span>
                         <span className="text-sm text-center">수량</span>
-                        <span className="text-sm text-right">금액</span>
                         <span className="text-sm text-center">관리</span>
                       </div>
 
@@ -171,7 +170,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                           return (
                             <div key={sel.id}>
                               {/* Desktop View */}
-                              <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_80px_50px] gap-x-4 items-center py-3 px-4 rounded-xl bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
+                              <div className="hidden md:grid md:grid-cols-[100px_1fr_60px_50px] gap-x-4 items-center py-3 px-4 rounded-xl bg-white shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all duration-200">
                                 <div className="flex items-center gap-2">
                                   <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
                                     <span className="text-white text-xs font-bold">{sel.participant_name.charAt(0)}</span>
@@ -183,9 +182,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
                                   <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
                                     {sel.quantity}
                                   </span>
-                                </span>
-                                <span className="text-right font-semibold text-blue-600">
-                                  {formatPrice(menuPrice)}
                                 </span>
                                 <div className="flex justify-center">
                                   <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
@@ -206,7 +202,6 @@ export default async function OrderPage({ params }: OrderPageProps) {
                                   </div>
                                   <div className="flex items-center gap-3">
                                     <div className="text-right">
-                                      <div className="font-semibold text-blue-600 text-lg">{formatPrice(menuPrice)}</div>
                                       <div className="text-sm text-gray-500">수량: {sel.quantity}</div>
                                     </div>
                                     <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
@@ -220,21 +215,11 @@ export default async function OrderPage({ params }: OrderPageProps) {
 
                       {/* Summary */}
                       <div className="mt-6 pt-4 border-t border-gray-200">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+                        <div className="flex justify-center mb-4">
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-600">총 주문 수량:</span>
                             <span className="inline-flex items-center justify-center px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full text-sm font-bold">
                               {orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)}개
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">총 금액:</span>
-                            <span className="font-bold text-lg text-blue-600">
-                              {formatPrice(orderSelections.reduce((sum, sel) => {
-                                const menuItems = sel.menu_items as any;
-                                const price = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
-                                return sum + (price * sel.quantity);
-                              }, 0))}
                             </span>
                           </div>
                         </div>

@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { formatPrice } from "@/lib/utils"
+
 
 interface OrderSessionCardProps {
   shopId: string
@@ -131,7 +131,6 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
   )
 
   const totalSelectionsCount = orderSelections.reduce((sum, sel) => sum + sel.quantity, 0)
-  const totalOrderPrice = orderSelections.reduce((sum, sel) => sum + sel.quantity * sel.menu_items.price, 0)
 
   // 남은 시간 실시간 카운트다운
   const [remainingText, setRemainingText] = useState<string | null>(null);
@@ -249,7 +248,7 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="w-full justify-between px-4">
                 <span className="font-semibold">
-                  View Selections ({totalSelectionsCount} items, {formatPrice(totalOrderPrice)})
+                  View Selections ({totalSelectionsCount} items)
                 </span>
                 {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
@@ -262,7 +261,7 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
                     {selections.map((selection) => (
                       <li key={selection.id} className="flex justify-between items-center text-sm">
                         <span>
-                          {selection.quantity}x {selection.menu_items.name} ({formatPrice(selection.menu_items.price)} each)
+                          {selection.quantity}x {selection.menu_items.name}
                         </span>
                         <Button
                           variant="ghost"

@@ -68,14 +68,7 @@ export default async function CoffeeShopListPage() {
                 <CardContent className="pt-0">
                   <div className="space-y-4">
                     <StartNewOrderForm shopId={shop.id} shopName={shop.name} />
-                    <div className="text-center">
-                      <Link 
-                        href={`/shop/${shop.id}`}
-                        className="text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                      >
-                        매장 관리하기 →
-                      </Link>
-                    </div>
+
                   </div>
                 </CardContent>
               </Card>
