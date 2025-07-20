@@ -148,7 +148,7 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl border-0">
               {!isSuccess ? (
                 <>
-                  <h3 className="text-lg font-semibold mb-4 text-gray-800">{shopName}에서 쏩니다</h3>
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">{shopName} 주문링크 생성</h3>
                   
                   <div className="space-y-4">
                     <div>
