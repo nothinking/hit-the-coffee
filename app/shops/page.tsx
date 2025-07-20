@@ -19,7 +19,7 @@ export default async function CoffeeShopListPage() {
     )
   }
 
-  // 모든 매장을 표시
+  // 모든 메뉴판을 표시
   const allShops = coffeeShops || []
 
   return (
@@ -29,7 +29,7 @@ export default async function CoffeeShopListPage() {
         <div className="mb-12">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-lg text-gray-600">원하는 매장에서 쏘세요~ 🎯</p>
+              <p className="text-lg text-gray-600">원하는 메뉴판에서 쏘세요~ 🎯</p>
               <p className="text-sm text-gray-500 mt-2">주문 취합이 편해 집니다</p>
             </div>
             
@@ -37,7 +37,7 @@ export default async function CoffeeShopListPage() {
             <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white">
               <Link href="/register-shop">
                 <span className="mr-2">🏪</span>
-                매장 등록
+                메뉴판 등록
               </Link>
             </Button>
           </div>
@@ -79,12 +79,12 @@ export default async function CoffeeShopListPage() {
             <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">☕</span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">등록된 매장이 없습니다</h2>
-            <p className="text-lg text-gray-600 mb-8">첫 번째 매장을 등록하고 주문 시스템을 시작해보세요!</p>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4">등록된 메뉴판이 없습니다</h2>
+          <p className="text-lg text-gray-600 mb-8">첫 번째 메뉴판을 등록하고 주문 시스템을 시작해보세요!</p>
             <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
               <Link href="/register-shop">
                 <span className="mr-2">🚀</span>
-                첫 번째 매장 등록하기
+                첫 번째 메뉴판 등록하기
               </Link>
             </Button>
           </div>

@@ -27,7 +27,7 @@ export function GNB() {
             <NavigationMenuItem>
               <Link href="/shops" legacyBehavior passHref>
                 <NavigationMenuLink className="px-2 md:px-4 py-2 text-white hover:text-blue-100 hover:bg-white/10 rounded-lg transition-all duration-200 font-medium text-sm md:text-base">
-                  매장목록
+                  메뉴판목록
                 </NavigationMenuLink>
               </Link>
             </NavigationMenuItem>

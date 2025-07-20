@@ -28,14 +28,14 @@ export function DeleteShopButton({ shopId }: { shopId: string }) {
     const result = await deleteShop(shopId)
     if (result.success) {
       toast({
-        title: "매장 삭제 완료",
-        description: "매장이 삭제되었습니다.",
+        title: "메뉴판 삭제 완료",
+        description: "메뉴판이 삭제되었습니다.",
       })
       router.push('/shops')
     } else {
       toast({
-        title: "매장 삭제 실패",
-        description: result.message || "매장 삭제에 실패했습니다.",
+        title: "메뉴판 삭제 실패",
+        description: result.message || "메뉴판 삭제에 실패했습니다.",
         variant: "destructive",
       })
     }
@@ -55,10 +55,10 @@ export function DeleteShopButton({ shopId }: { shopId: string }) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>매장 삭제 확인</AlertDialogTitle>
-          <AlertDialogDescription>
-            정말로 이 매장을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 메뉴와 주문 내역이 영구적으로 삭제됩니다.
-          </AlertDialogDescription>
+                  <AlertDialogTitle>메뉴판 삭제 확인</AlertDialogTitle>
+        <AlertDialogDescription>
+          정말로 이 메뉴판을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 메뉴와 주문 내역이 영구적으로 삭제됩니다.
+        </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>취소</AlertDialogCancel>

@@ -166,7 +166,7 @@ export default function RegisterMenuPage() {
                 추출된 메뉴 {extractedMenus.length}개로 주문 링크를 생성합니다
                 {shopName.trim() ? (
                   <span className="block text-xs text-blue-600 mt-1">
-                    💡 메뉴판 이름이 입력되어 매장이 생성됩니다
+                    💡 메뉴판 이름이 입력되어 메뉴판이 생성됩니다
                   </span>
                 ) : (
                   <span className="block text-xs text-orange-600 mt-1">

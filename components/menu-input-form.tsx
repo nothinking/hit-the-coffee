@@ -32,8 +32,8 @@ type InputMethod = 'camera' | 'text' | 'voice' | 'file' | null
 interface MenuInputFormProps {
   onMenusExtracted: (menus: MenuItem[]) => void
   onReset?: () => void
-  shopId?: string // 매장 ID가 있으면 해당 매장에 메뉴 추가
-  onMenusAdded?: (menus: MenuItem[]) => void // 매장에 메뉴 추가 완료 콜백
+  shopId?: string // 메뉴판 ID가 있으면 해당 메뉴판에 메뉴 추가
+  onMenusAdded?: (menus: MenuItem[]) => void // 메뉴판에 메뉴 추가 완료 콜백
 }
 
 // Web Speech API 타입 정의
@@ -378,7 +378,7 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
     }
   }
 
-  // 매장에 메뉴 추가
+      // 메뉴판에 메뉴 추가
   const addMenusToShop = async () => {
     if (!shopId || extractedMenus.length === 0) return
 
@@ -404,7 +404,7 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
 
       toast({
         title: "메뉴 추가 완료",
-        description: `${extractedMenus.length}개의 메뉴가 매장에 추가되었습니다.`
+        description: `${extractedMenus.length}개의 메뉴가 메뉴판에 추가되었습니다.`
       })
 
       if (onMenusAdded) {
@@ -457,7 +457,7 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
             </CardTitle>
             <p className="text-sm text-muted-foreground text-center">
               {shopId 
-                ? "메뉴판을 입력하고 매장에 바로 추가할 수 있습니다"
+                ? "메뉴판을 입력하고 메뉴판에 바로 추가할 수 있습니다"
                 : "메뉴판을 입력하고 바로 주문 링크를 생성할 수 있습니다"
               }
             </p>
@@ -801,12 +801,12 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
                   {isAddingToShop ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      매장에 추가 중...
+                      메뉴판에 추가 중...
                     </>
                   ) : (
                     <>
                       <Plus className="w-4 h-4 mr-2" />
-                      매장에 메뉴 추가
+                      메뉴판에 메뉴 추가
                     </>
                   )}
                 </Button>

@@ -80,7 +80,7 @@ export default function RegisterShopPage() {
     <main className="flex items-center justify-center min-h-screen p-4 pt-24">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-semibold text-center">매장등록</CardTitle>
+          <CardTitle className="text-2xl font-semibold text-center">메뉴판등록</CardTitle>
         </CardHeader>
         <CardContent className="space-y-8">
           {/* Shop Information Section */}
@@ -124,7 +124,7 @@ export default function RegisterShopPage() {
                 handleSubmit(e as any)
               }}
             >
-              {loading ? "등록 중..." : "매장 등록하기"}
+              {loading ? "등록 중..." : "메뉴판 등록하기"}
             </Button>
           </div>
         </CardContent>

@@ -339,7 +339,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   }
 
   const handleMenusAdded = (menus: MenuItem[]) => {
-    // 매장에 메뉴 추가 완료 시 호출
+    // 메뉴판에 메뉴 추가 완료 시 호출
     loadShopData() // 메뉴 목록 새로고침
     setShowSmartAdd(false) // 스마트 추가 UI 닫기
   }
@@ -602,7 +602,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             <div className="text-center py-8">
               <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">주문 세션 관리</h3>
-              <p className="text-gray-600 mb-6">이 매장의 모든 주문 세션을 확인하고 관리할 수 있습니다</p>
+              <p className="text-gray-600 mb-6">이 메뉴판의 모든 주문 세션을 확인하고 관리할 수 있습니다</p>
               <div className="flex flex-col gap-3">
                 <Button asChild className="w-full">
                   <Link href={`/shop/${shopId}/orders`}>

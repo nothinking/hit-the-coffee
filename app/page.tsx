@@ -25,7 +25,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
               <Link href="/register-shop">
-                매장 등록하기
+                메뉴판 등록하기
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
@@ -35,7 +35,7 @@ export default function Home() {
             </Button>
             <Button asChild variant="outline" size="lg">
               <Link href="/shops">
-                매장 둘러보기
+                메뉴판 둘러보기
               </Link>
             </Button>
           </div>
@@ -109,7 +109,7 @@ export default function Home() {
               </div>
               <CardTitle>빠른 설정</CardTitle>
               <CardDescription>
-                몇 번의 클릭만으로 매장과 메뉴를 등록하고 바로 주문을 시작할 수 있습니다
+                몇 번의 클릭만으로 메뉴판과 메뉴를 등록하고 바로 주문을 시작할 수 있습니다
               </CardDescription>
             </CardHeader>
           </Card>
@@ -201,9 +201,9 @@ export default function Home() {
             <div className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
               1
             </div>
-            <h3 className="text-xl font-semibold mb-2">매장 등록</h3>
+            <h3 className="text-xl font-semibold mb-2">메뉴판 등록</h3>
             <p className="text-gray-600">
-              매장 정보와 메뉴를 등록하여 주문을 받을 준비를 합니다
+              메뉴판 정보와 메뉴를 등록하여 주문을 받을 준비를 합니다
             </p>
           </div>
 
@@ -241,7 +241,7 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
               <Link href="/register-shop">
-                매장 등록하기
+                메뉴판 등록하기
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">

@@ -111,12 +111,12 @@ export default function OrdersPage({ params }: OrdersPageProps) {
           <Button asChild variant="outline" size="sm">
             <Link href={`/shop/${shopId}`}>
               <ArrowLeft className="w-4 h-4 mr-2" />
-              매장으로 돌아가기
+              메뉴판으로 돌아가기
             </Link>
           </Button>
         </div>
         <h1 className="text-3xl font-bold mb-2">{coffeeShop.name} - 주문 세션</h1>
-        <p className="text-gray-600">이 매장의 모든 주문 세션을 확인할 수 있습니다.</p>
+                    <p className="text-gray-600">이 메뉴판의 모든 주문 세션을 확인할 수 있습니다.</p>
       </div>
 
       {/* Order Sessions */}
