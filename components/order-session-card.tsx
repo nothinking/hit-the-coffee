@@ -10,7 +10,18 @@ import { terminateOrder, deleteOrderSelection, deleteOrderSession } from "@/app/
 import { CheckCircle2, XCircle, ChevronDown, ChevronUp, Trash2, MessageCircle } from "lucide-react" // Import icons
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useRouter } from "next/navigation"
-import Link from "next/link";
+import Link from "next/link"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface OrderSessionCardProps {
   shopId: string
@@ -40,6 +51,8 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
   const [loadingDelete, setLoadingDelete] = React.useState(false)
   const [isOpen, setIsOpen] = React.useState(false)
   const [orderLink, setOrderLink] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
   useEffect(() => {
     setOrderLink(`${window.location.origin}/order/${order.share_code}`);
   }, [order.share_code]);
@@ -81,8 +94,8 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
   }
 
   async function handleDeleteSession() {
-    if (!confirm("정말로 이 주문 세션을 삭제하시겠습니까?")) return;
     setLoadingDelete(true)
+    setIsDeleteDialogOpen(false)
     const result = await deleteOrderSession(shopId, order.id)
     if (result.success) {
       toast({
@@ -164,15 +177,36 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
           ) : (
             <XCircle className="h-5 w-5 text-red-500" />
           )}
-          <Button
-            variant="destructive"
-            size="sm"
-            className="ml-auto"
-            onClick={handleDeleteSession}
-            disabled={loadingDelete}
-          >
-            {loadingDelete ? "Deleting..." : "Delete"}
-          </Button>
+          <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="ml-auto"
+                disabled={loadingDelete}
+              >
+                {loadingDelete ? "Deleting..." : "Delete"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>주문 세션 삭제 확인</AlertDialogTitle>
+                <AlertDialogDescription>
+                  정말로 이 주문 세션을 삭제하시겠습니까? 이 작업은 되돌릴 수 없으며, 모든 주문 내역이 영구적으로 삭제됩니다.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={loadingDelete}>취소</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDeleteSession}
+                  disabled={loadingDelete}
+                  className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                >
+                  {loadingDelete ? "삭제 중..." : "삭제"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardTitle>
         <CardDescription>
           Created: {new Date(order.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })}

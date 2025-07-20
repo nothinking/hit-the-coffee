@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation"
 interface RefreshContextType {
   isRefreshing: boolean
   setIsRefreshing: (refreshing: boolean) => void
+  pauseAutoRefresh: () => void
+  resumeAutoRefresh: () => void
 }
 
 const RefreshContext = createContext<RefreshContextType | undefined>(undefined)
@@ -32,9 +34,13 @@ export function AutoRefreshWrapper({
   const router = useRouter()
   const [isEnabled, setIsEnabled] = useState(enabled)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
+
+  const pauseAutoRefresh = () => setIsPaused(true)
+  const resumeAutoRefresh = () => setIsPaused(false)
 
   useEffect(() => {
-    if (!isEnabled) return
+    if (!isEnabled || isPaused) return
 
     const interval = setInterval(() => {
       setIsRefreshing(true)
@@ -47,10 +53,15 @@ export function AutoRefreshWrapper({
     }, intervalMs)
 
     return () => clearInterval(interval)
-  }, [router, intervalMs, isEnabled])
+  }, [router, intervalMs, isEnabled, isPaused])
 
   return (
-    <RefreshContext.Provider value={{ isRefreshing, setIsRefreshing }}>
+    <RefreshContext.Provider value={{ 
+      isRefreshing, 
+      setIsRefreshing, 
+      pauseAutoRefresh, 
+      resumeAutoRefresh 
+    }}>
       {children}
     </RefreshContext.Provider>
   )
