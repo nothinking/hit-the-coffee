@@ -318,10 +318,10 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
     <div className="container mx-auto px-4 py-8 max-w-6xl pt-20">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+        <div className="flex flex-row justify-between items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{coffeeShop.name}</h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
+            <div className="flex flex-row items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Coffee className="w-4 h-4" />
                 <span>{menuItems.length}개 메뉴</span>
