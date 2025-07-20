@@ -11,6 +11,7 @@ import { OrderSessionCard } from "@/components/order-session-card"
 import { StartNewOrderForm } from "@/components/start-new-order-form"
 import { DeleteShopButton } from "@/components/delete-shop-button"
 import { MenuInputForm } from "@/components/menu-input-form"
+import Link from "next/link"
 
 import { useToast } from "@/hooks/use-toast"
 import { 
@@ -314,276 +315,266 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-6xl pt-20">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{coffeeShop.name}</h1>
-        <div className="flex items-center gap-4 text-sm text-gray-600">
-          <div className="flex items-center gap-1">
-            <Coffee className="w-4 h-4" />
-            <span>{menuItems.length}개 메뉴</span>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{coffeeShop.name}</h1>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-1">
+                <Coffee className="w-4 h-4" />
+                <span>{menuItems.length}개 메뉴</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Users className="w-4 h-4" />
+                <span>{orderSessions.length}개 주문</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Clock className="w-4 h-4" />
+                <span>{new Date(coffeeShop.created_at).toLocaleDateString()}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{orderSessions.length}개 주문</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Clock className="w-4 h-4" />
-            <span>{new Date(coffeeShop.created_at).toLocaleDateString()}</span>
-          </div>
+          <DeleteShopButton shopId={shopId} />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Shop Management */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Shop Info Card */}
-          <Card className="bg-white shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Coffee className="w-5 h-5" />
-                매장 정보
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium text-gray-700">매장명</Label>
-                  <p className="text-lg font-semibold">{coffeeShop.name}</p>
-                </div>
-                                 <div className="flex gap-2">
-                   <StartNewOrderForm shopId={shopId} shopName={coffeeShop.name} />
-                   <DeleteShopButton shopId={shopId} />
-                 </div>
+      {/* Quick Order Section */}
+      <div className="mb-8">
+        <Card className="bg-gradient-to-r from-blue-600 to-purple-600 border-0 shadow-xl">
+          <CardContent className="p-8 text-center">
+            <div className="max-w-md mx-auto">
+              <h2 className="text-2xl font-bold text-white mb-4">🚀 주문 취합 시작하기</h2>
+              <p className="text-blue-100 mb-6">팀원들과 함께 주문할 수 있는 링크를 생성하세요</p>
+              <div className="flex justify-center">
+                <StartNewOrderForm shopId={shopId} shopName={coffeeShop.name} />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          {/* Menu Management Section */}
-          <Card className="bg-white shadow-lg border-0">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Coffee className="w-5 h-5" />
-                    메뉴 관리
-                  </CardTitle>
-                </div>
-                <div className="flex gap-2">
-                  {menuItems.length > 0 && (
-                    <>
-                      <Button 
-                        onClick={() => setShowAddForm(true)}
-                        variant="outline"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        메뉴 추가
-                      </Button>
-                      <Button 
-                        onClick={() => setShowSmartAdd(true)}
-                        variant="outline"
-                      >
-                        <Edit3 className="w-4 h-4 mr-2" />
-                        스마트 추가
-                      </Button>
-                      <Button 
-                        onClick={handleResetAllMenus}
-                        variant="outline"
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <RotateCcw className="w-4 h-4 mr-2" />
-                        전체 리셋
-                      </Button>
-                    </>
-                  )}
-                </div>
+      <div className="space-y-6">
+        {/* Menu Management Section */}
+        <Card className="bg-white shadow-lg border-0">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Coffee className="w-5 h-5" />
+                </CardTitle>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Smart Menu Add Section */}
-              {showSmartAdd && (
-                <div className="p-6 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">스마트 메뉴 추가</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowSmartAdd(false)}
+              <div className="flex gap-2">
+                {menuItems.length > 0 && (
+                  <>
+                    <Button 
+                      onClick={() => setShowAddForm(true)}
+                      variant="outline"
                     >
-                      <X className="w-4 h-4" />
+                      <Plus className="w-4 h-4 mr-2" />
+                      메뉴 추가
                     </Button>
+                    <Button 
+                      onClick={() => setShowSmartAdd(true)}
+                      variant="outline"
+                    >
+                      <Edit3 className="w-4 h-4 mr-2" />
+                      스마트 추가
+                    </Button>
+                    <Button 
+                      onClick={handleResetAllMenus}
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      전체 리셋
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Smart Menu Add Section */}
+            {showSmartAdd && (
+              <div className="p-6 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">스마트 메뉴 추가</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowSmartAdd(false)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                <MenuInputForm 
+                  onMenusExtracted={handleMenusExtracted}
+                  onReset={handleReset}
+                  shopId={shopId}
+                  onMenusAdded={handleMenusAdded}
+                />
+              </div>
+            )}
+
+            {/* Add Menu Form */}
+            {showAddForm && (
+              <div className="p-6 bg-blue-50 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">새 메뉴 추가</h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddForm(false)
+                      setNewMenuItem({ name: '', description: '', price: '' })
+                    }}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+                <form onSubmit={handleAddMenuItem} className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">메뉴 이름 *</Label>
+                    <Input
+                      id="name"
+                      value={newMenuItem.name}
+                      onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
+                      placeholder="예: 아메리카노"
+                      required
+                    />
                   </div>
                   
-                  <MenuInputForm 
-                    onMenusExtracted={handleMenusExtracted}
-                    onReset={handleReset}
-                    shopId={shopId}
-                    onMenusAdded={handleMenusAdded}
-                  />
-                </div>
-              )}
+                  <div>
+                    <Label htmlFor="description">설명</Label>
+                    <Textarea
+                      id="description"
+                      value={newMenuItem.description}
+                      onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
+                      placeholder="메뉴에 대한 설명을 입력하세요"
+                      rows={3}
+                    />
+                  </div>
 
-              {/* Add Menu Form */}
-              {showAddForm && (
-                <div className="p-6 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">새 메뉴 추가</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                  <div>
+                    <Label htmlFor="price">가격 (원)</Label>
+                    <Input
+                      id="price"
+                      value={newMenuItem.price}
+                      onChange={(e) => setNewMenuItem({...newMenuItem, price: e.target.value})}
+                      placeholder="가격을 입력하세요"
+                      type="number"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1">
+                      <Save className="w-4 h-4 mr-2" />
+                      메뉴 추가
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="flex-1"
                       onClick={() => {
                         setShowAddForm(false)
                         setNewMenuItem({ name: '', description: '', price: '' })
                       }}
                     >
-                      <X className="w-4 h-4" />
+                      취소
                     </Button>
                   </div>
-                  <form onSubmit={handleAddMenuItem} className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">메뉴 이름 *</Label>
-                      <Input
-                        id="name"
-                        value={newMenuItem.name}
-                        onChange={(e) => setNewMenuItem({...newMenuItem, name: e.target.value})}
-                        placeholder="예: 아메리카노"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="description">설명</Label>
-                      <Textarea
-                        id="description"
-                        value={newMenuItem.description}
-                        onChange={(e) => setNewMenuItem({...newMenuItem, description: e.target.value})}
-                        placeholder="메뉴에 대한 설명을 입력하세요"
-                        rows={3}
-                      />
-                    </div>
+                </form>
+              </div>
+            )}
 
-                    <div>
-                      <Label htmlFor="price">가격 (원)</Label>
-                      <Input
-                        id="price"
-                        value={newMenuItem.price}
-                        onChange={(e) => setNewMenuItem({...newMenuItem, price: e.target.value})}
-                        placeholder="가격을 입력하세요"
-                        type="number"
-                      />
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button type="submit" className="flex-1">
-                        <Save className="w-4 h-4 mr-2" />
-                        메뉴 추가
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="flex-1"
-                        onClick={() => {
-                          setShowAddForm(false)
-                          setNewMenuItem({ name: '', description: '', price: '' })
-                        }}
-                      >
-                        취소
-                      </Button>
-                    </div>
-                  </form>
+            {/* Menu Items List */}
+            {menuItems.length === 0 ? (
+              <div className="text-center py-12">
+                <Coffee className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴가 없습니다</h3>
+                <p className="text-gray-600 mb-4">첫 번째 메뉴를 추가해보세요</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={() => setShowAddForm(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    메뉴 추가
+                  </Button>
+                  <Button onClick={() => setShowSmartAdd(true)} variant="outline">
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    스마트 추가
+                  </Button>
                 </div>
-              )}
-
-              {/* Menu Items List */}
-              {menuItems.length === 0 ? (
-                <div className="text-center py-12">
-                  <Coffee className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴가 없습니다</h3>
-                  <p className="text-gray-600 mb-4">첫 번째 메뉴를 추가해보세요</p>
-                  <div className="flex gap-2 justify-center">
-                    <Button onClick={() => setShowAddForm(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      메뉴 추가
-                    </Button>
-                    <Button onClick={() => setShowSmartAdd(true)} variant="outline">
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      스마트 추가
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {menuItems.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{item.name}</h3>
-                          {item.price && (
-                            <span className="text-sm font-semibold text-green-600">
-                              {formatPrice(item.price)}
-                            </span>
-                          )}
-                        </div>
-                        {item.description && (
-                          <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {menuItems.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{item.name}</h3>
+                        {item.price && (
+                          <span className="text-sm font-semibold text-green-600">
+                            {formatPrice(item.price)}
+                          </span>
                         )}
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingItem(item)}
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDeleteMenuItem(item.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
+                      {item.description && (
+                        <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditingItem(item)}
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-red-600 hover:text-red-700"
+                        onClick={() => handleDeleteMenuItem(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Right Column - Order Sessions */}
-        <div className="space-y-6">
-          <Card className="bg-white shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                주문 세션
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {orderSessions.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600">주문 세션이 없습니다</p>
+        {/* Order Sessions Link */}
+        <Card className="bg-white shadow-lg border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              주문 세션 관리
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <Users className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">주문 세션 관리</h3>
+              <p className="text-gray-600 mb-6">이 매장의 모든 주문 세션을 확인하고 관리할 수 있습니다</p>
+              <div className="flex flex-col gap-3">
+                <Button asChild className="w-full">
+                  <Link href={`/shop/${shopId}/orders`}>
+                    <Users className="w-4 h-4 mr-2" />
+                    주문 세션 보기 ({orderSessions.length}개)
+                  </Link>
+                </Button>
+                <div className="text-sm text-gray-500">
+                  최근 주문: {orderSessions.length > 0 ? new Date(orderSessions[0].created_at).toLocaleDateString() : '없음'}
                 </div>
-              ) : (
-                                 <div className="space-y-4">
-                   {orderSessions.map((session) => (
-                     <OrderSessionCard 
-                       key={session.id} 
-                       shopId={shopId}
-                       order={session}
-                       orderSelections={session.order_selections || []}
-                       onOrderDeleted={loadShopData}
-                     />
-                   ))}
-                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Edit Menu Modal */}

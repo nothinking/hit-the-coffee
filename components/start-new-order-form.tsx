@@ -133,7 +133,7 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
     <>
       <Button 
         onClick={() => setShowModal(true)}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
       >
         <div className="flex items-center gap-2">
           <span>🎯</span>
@@ -189,7 +189,7 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
                     <Button
                       onClick={handleSubmit}
                       disabled={isPending || isGeneratingTitle}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white"
                     >
                       {isPending || isGeneratingTitle ? (
                         <div className="flex items-center gap-2">
