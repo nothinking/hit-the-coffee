@@ -539,14 +539,14 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="각 줄에 하나의 메뉴를 입력하세요:
 
-아메리카노 - 진한 커피 - 4500원
-카페라떼 - 우유가 들어간 부드러운 커피 - 5000원
-카푸치노 - 우유 거품이 있는 커피 - 5000원"
+아메리카노 - 진한 커피 - 4500
+카페라떼 - 우유가 들어간 부드러운 커피 - 5000
+카푸치노 - 우유 거품이 있는 커피 - 5000"
                 rows={8}
                 className="w-full"
               />
               <p className="text-xs text-muted-foreground">
-                💡 입력 형식: 메뉴명 - 설명 - 가격원
+                💡 입력 형식: 메뉴명 - 설명 - 가격
               </p>
             </div>
             
@@ -784,7 +784,7 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
                   </div>
                   {menu.price && (
                     <p className="font-semibold text-green-600">
-                      {Number(menu.price).toLocaleString()}원
+                      {Number(menu.price).toLocaleString()}
                     </p>
                   )}
                 </div>

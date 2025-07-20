@@ -38,8 +38,8 @@ interface OrderSessionCardProps {
     id: string
     participant_name: string
     quantity: number
-    menu_item_id: string
-    menu_items: { name: string; price: number } // Joined data
+    snapshot_id: string
+    order_menu_snapshots?: { name: string; price: number } // Joined data from snapshots (optional for backward compatibility)
   }>
   onOrderDeleted?: () => void // 주문 삭제 후 콜백
 }
@@ -261,7 +261,7 @@ export function OrderSessionCard({ shopId, order, orderSelections, onOrderDelete
                     {selections.map((selection) => (
                       <li key={selection.id} className="flex justify-between items-center text-sm">
                         <span>
-                          {selection.quantity}x {selection.menu_items.name}
+                          {selection.quantity}x {selection.order_menu_snapshots?.name || 'Unknown Menu'}
                         </span>
                         <Button
                           variant="ghost"

@@ -73,7 +73,7 @@ export default function TestCameraPage() {
                   </div>
                   {menu.price && (
                     <p className="font-semibold text-green-600">
-                      {Number(menu.price).toLocaleString()}원
+                      {Number(menu.price).toLocaleString()}
                     </p>
                   )}
                 </div>

@@ -70,14 +70,7 @@ export default function RegisterMenuPage() {
       return
     }
 
-    if (!shopName.trim()) {
-      toast({
-        title: "매장 이름 필요",
-        description: "매장 이름을 입력해주세요.",
-        variant: "destructive"
-      })
-      return
-    }
+    // 메뉴판 이름은 옵션이므로 검증 제거
 
     setIsLoading(true)
     setIsSuccess(false)
@@ -88,7 +81,7 @@ export default function RegisterMenuPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          shopName: shopName.trim(),
+          shopName: shopName.trim() || null,
           title: orderTitle.trim(),
           expiresInMinutes: parseInt(expiresInMinutes) || 30,
           menus: extractedMenus.map(menu => ({
@@ -171,6 +164,15 @@ export default function RegisterMenuPage() {
             <div className="text-center space-y-4">
               <p className="text-sm text-gray-600">
                 추출된 메뉴 {extractedMenus.length}개로 주문 링크를 생성합니다
+                {shopName.trim() ? (
+                  <span className="block text-xs text-blue-600 mt-1">
+                    💡 메뉴판 이름이 입력되어 매장이 생성됩니다
+                  </span>
+                ) : (
+                  <span className="block text-xs text-orange-600 mt-1">
+                    💡 메뉴판 이름이 없어 스냅샷만 생성됩니다
+                  </span>
+                )}
               </p>
               <Button 
                 onClick={() => setShowModal(true)} 
@@ -196,13 +198,13 @@ export default function RegisterMenuPage() {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        매장 이름 *
+                        메뉴판 이름 (선택사항)
                       </label>
                       <input
                         type="text"
                         value={shopName}
                         onChange={e => setShopName(e.target.value)}
-                        placeholder="예: 스타벅스 강남점"
+                        placeholder="비워두면 스냅샷만 생성됩니다"
                         className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus:border-blue-500 focus:outline-none transition-colors"
                         disabled={isLoading}
                       />

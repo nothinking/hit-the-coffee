@@ -175,6 +175,35 @@ export async function startNewOrder(shopId: string, title?: string, expiresInMin
     return { success: false, message: error.message }
   }
 
+  // Create menu snapshots for this order to preserve menu state
+  const { data: menuItems, error: menuError } = await supabase
+    .from("menu_items")
+    .select("id, name, description, price")
+    .eq("coffee_shop_id", shopId)
+
+  if (menuError) {
+    console.error("Error fetching menu items for snapshot:", menuError)
+    // Continue anyway, the order was created successfully
+  } else if (menuItems && menuItems.length > 0) {
+    // Create snapshots for each menu item
+    const snapshots = menuItems.map(item => ({
+      order_id: data.id,
+      original_menu_item_id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price
+    }))
+
+    const { error: snapshotError } = await supabase
+      .from("order_menu_snapshots")
+      .insert(snapshots)
+
+    if (snapshotError) {
+      console.error("Error creating menu snapshots:", snapshotError)
+      // Continue anyway, the order was created successfully
+    }
+  }
+
   revalidatePath(`/shop/${shopId}`)
   return { success: true, message: "New order started!", shareCode: data.share_code }
 }

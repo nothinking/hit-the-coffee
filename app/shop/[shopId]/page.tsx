@@ -49,7 +49,7 @@ interface CoffeeShopDetailPageProps {
 }
 
 export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPageProps) {
-  const { shopId } = params
+  const [shopId, setShopId] = useState<string>("")
   const { toast } = useToast()
   
   // State management
@@ -64,9 +64,24 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
   const [editingItem, setEditingItem] = useState<any>(null)
   const [newMenuItem, setNewMenuItem] = useState<MenuItem>({ name: '', description: '', price: '' })
 
+  // Handle params as Promise in Next.js 15
+  useEffect(() => {
+    const handleParams = async () => {
+      try {
+        const resolvedParams = await params
+        setShopId(resolvedParams.shopId)
+      } catch (error) {
+        console.error('Error resolving params:', error)
+      }
+    }
+    handleParams()
+  }, [params])
+
   // Load data on component mount
   useEffect(() => {
-    loadShopData()
+    if (shopId) {
+      loadShopData()
+    }
   }, [shopId])
 
   async function loadShopData() {
@@ -99,8 +114,8 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
         setMenuItems(menus || [])
       }
 
-      // Fetch order sessions
-      const { data: orders, error: orderError } = await supabase
+      // Fetch order sessions with snapshots, fallback to menu_items if snapshots don't exist
+      let { data: orders, error: orderError } = await supabase
         .from("orders")
         .select(`
           *,
@@ -108,8 +123,8 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             id,
             participant_name,
             quantity,
-            menu_item_id,
-            menu_items (
+            snapshot_id,
+            order_menu_snapshots (
               name,
               price
             )
@@ -118,7 +133,41 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
         .eq("coffee_shop_id", shopId)
         .order("created_at", { ascending: false })
 
-      if (orderError) {
+      // If no snapshots found, try with menu_items
+      if (orderError || !orders || orders.length === 0) {
+        console.log("No snapshots found for orders, trying with menu_items")
+        const { data: fallbackOrders, error: fallbackError } = await supabase
+          .from("orders")
+          .select(`
+            *,
+            order_selections (
+              id,
+              participant_name,
+              quantity,
+              menu_item_id,
+              menu_items (
+                name,
+                price
+              )
+            )
+          `)
+          .eq("coffee_shop_id", shopId)
+          .order("created_at", { ascending: false })
+
+        if (!fallbackError && fallbackOrders) {
+          // Transform fallback data to match snapshot format
+          orders = fallbackOrders.map(order => ({
+            ...order,
+            order_selections: order.order_selections?.map((selection: any) => ({
+              ...selection,
+              snapshot_id: selection.menu_item_id,
+              order_menu_snapshots: selection.menu_items
+            })) || []
+          }))
+        }
+      }
+
+      if (orderError && !orders) {
         console.error("Error fetching order sessions:", orderError)
       } else {
         setOrderSessions(orders || [])

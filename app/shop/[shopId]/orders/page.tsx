@@ -16,13 +16,28 @@ interface OrdersPageProps {
 }
 
 export default function OrdersPage({ params }: OrdersPageProps) {
-  const { shopId } = params
+  const [shopId, setShopId] = useState<string>("")
   const [coffeeShop, setCoffeeShop] = useState<any>(null)
   const [orderSessions, setOrderSessions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadData()
+    // Handle params as Promise in Next.js 15
+    const handleParams = async () => {
+      try {
+        const resolvedParams = await params
+        setShopId(resolvedParams.shopId)
+      } catch (error) {
+        console.error('Error resolving params:', error)
+      }
+    }
+    handleParams()
+  }, [params])
+
+  useEffect(() => {
+    if (shopId) {
+      loadData()
+    }
   }, [shopId])
 
   async function loadData() {

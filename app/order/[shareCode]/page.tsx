@@ -33,36 +33,148 @@ export default async function OrderPage({ params }: OrderPageProps) {
     notFound() // If order not found or error, show 404
   }
 
-  // 2. Fetch the coffee shop details associated with this order
-  const { data: coffeeShop, error: shopError } = await supabase
-    .from("coffee_shops")
-    .select("*")
-    .eq("id", order.coffee_shop_id)
-    .single()
+  // 2. Fetch the coffee shop details associated with this order (if exists)
+  let coffeeShop = null;
+  if (order.coffee_shop_id) {
+    const { data: shop, error: shopError } = await supabase
+      .from("coffee_shops")
+      .select("*")
+      .eq("id", order.coffee_shop_id)
+      .single()
 
-  if (shopError || !coffeeShop) {
-    console.error("Error fetching coffee shop for order:", shopError)
-    notFound() // If shop not found or error, show 404
+    if (shopError) {
+      console.error("Error fetching coffee shop for order:", shopError)
+      // Continue without shop - this is valid for orders without shops
+    } else {
+      coffeeShop = shop;
+    }
   }
 
-  // 3. Fetch the menu items for this coffee shop
-  const { data: menuItems, error: menuError } = await supabase
-    .from("menu_items")
-    .select("*")
-    .eq("coffee_shop_id", coffeeShop.id)
+  // 3. Fetch the menu items from snapshots for this order (preserves menu state at creation time)
+  let { data: menuItems, error: menuError } = await supabase
+    .from("order_menu_snapshots")
+    .select("id, name, description, price, original_menu_item_id")
+    .eq("order_id", order.id)
     .order("name", { ascending: true })
 
-  if (menuError) {
-    console.error("Error fetching menu items for order:", menuError)
-    // Continue rendering, but menuItems will be null or empty
+  // If no snapshots exist, try to create them
+  if (menuError || !menuItems || menuItems.length === 0) {
+    console.log("No snapshots found, trying to create them")
+    
+    // Import the function dynamically since this is a server component
+    const { createMenuSnapshotsForOrder } = await import("./actions")
+    const result = await createMenuSnapshotsForOrder(order.id)
+    
+    if (result.success) {
+      console.log("Created menu snapshots successfully")
+      // Fetch the newly created snapshots
+      const { data: newSnapshots } = await supabase
+        .from("order_menu_snapshots")
+        .select("id, name, description, price, original_menu_item_id")
+        .eq("order_id", order.id)
+        .order("name", { ascending: true })
+      
+      menuItems = newSnapshots || []
+    } else {
+      console.log("Failed to create snapshots, trying to get from existing selections")
+      
+      // Try to get menu items from existing order selections
+      const { data: existingSelections, error: selectionsError } = await supabase
+        .from("order_selections")
+        .select(`
+          menu_item_id,
+          menu_items (
+            id, name, description, price
+          )
+        `)
+        .eq("order_id", order.id)
+      
+      if (!selectionsError && existingSelections && existingSelections.length > 0) {
+        // Create snapshots from existing selections
+        const snapshots = existingSelections
+          .filter(sel => sel.menu_items)
+          .map(sel => ({
+            order_id: order.id,
+            original_menu_item_id: sel.menu_item_id,
+            name: (sel.menu_items as any).name,
+            description: (sel.menu_items as any).description,
+            price: (sel.menu_items as any).price
+          }))
+        
+        if (snapshots.length > 0) {
+          const { error: insertError } = await supabase
+            .from("order_menu_snapshots")
+            .insert(snapshots)
+          
+          if (!insertError) {
+            console.log("Created snapshots from existing selections")
+            // Fetch the newly created snapshots
+            const { data: newSnapshots } = await supabase
+              .from("order_menu_snapshots")
+              .select("id, name, description, price, original_menu_item_id")
+              .eq("order_id", order.id)
+              .order("name", { ascending: true })
+            
+            menuItems = newSnapshots || []
+          }
+        }
+      }
+      
+      // If still no menu items, fallback to current menu items (for backward compatibility)
+      if (!menuItems || menuItems.length === 0) {
+        console.log("Still no snapshots, falling back to current menu items")
+        if (coffeeShop) {
+          const { data: currentMenuItems, error: currentMenuError } = await supabase
+            .from("menu_items")
+            .select("id, name, description, price")
+            .eq("coffee_shop_id", coffeeShop.id)
+            .order("name", { ascending: true })
+          
+          if (currentMenuError) {
+            console.error("Error fetching current menu items:", currentMenuError)
+          } else {
+            // Add original_menu_item_id to match snapshot format
+            menuItems = currentMenuItems?.map(item => ({
+              ...item,
+              original_menu_item_id: item.id
+            })) || []
+          }
+        } else {
+          console.log("No coffee shop associated with this order")
+        }
+      }
+    }
   }
 
-  // 4. Fetch order selections for this order, joined with menu_items
-  const { data: orderSelections, error: selectionsError } = await supabase
+  // 4. Fetch order selections for this order, joined with snapshots
+  let { data: orderSelections, error: selectionsError } = await supabase
     .from("order_selections")
-    .select(`id, participant_name, quantity, menu_item_id, menu_items ( name, price )`)
+    .select(`id, participant_name, quantity, snapshot_id, order_menu_snapshots ( name, price )`)
     .eq("order_id", order.id)
     .order("created_at", { ascending: true })
+
+  // If no snapshots are used, try to get order selections with menu_items
+  if (selectionsError || !orderSelections || orderSelections.length === 0) {
+    console.log("No snapshots found for selections, trying to get with menu_items")
+    
+    // Get order selections with menu_items
+    const { data: fallbackSelections, error: fallbackError } = await supabase
+      .from("order_selections")
+      .select(`id, participant_name, quantity, menu_item_id, menu_items ( name, price )`)
+      .eq("order_id", order.id)
+      .order("created_at", { ascending: true })
+    
+    if (fallbackError) {
+      console.error("Error fetching fallback selections:", fallbackError)
+    } else if (fallbackSelections && fallbackSelections.length > 0) {
+      // Transform fallback data to match snapshot format
+      orderSelections = fallbackSelections?.map(selection => ({
+        ...selection,
+        snapshot_id: selection.menu_item_id,
+        order_menu_snapshots: selection.menu_items
+      })) || []
+    }
+  }
 
   if (selectionsError) {
     console.error("Error fetching order selections:", selectionsError)
@@ -74,7 +186,9 @@ export default async function OrderPage({ params }: OrderPageProps) {
   if (orderSelections && orderSelections.length > 0) {
     const merged: Record<string, { name: string; price: number; quantity: number }> = {};
     orderSelections.forEach(sel => {
-      const menu = Array.isArray(sel.menu_items) ? sel.menu_items[0] : sel.menu_items;
+      // Handle both snapshot and fallback data
+      const menu = Array.isArray((sel as any).order_menu_snapshots) ? (sel as any).order_menu_snapshots[0] : 
+                   (sel as any).order_menu_snapshots || (sel as any).menu_items;
       if (!menu) return;
       const key = `${menu.name}|${menu.price}`;
       if (!merged[key]) {
@@ -93,23 +207,25 @@ export default async function OrderPage({ params }: OrderPageProps) {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-lg mb-4">
               <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-600">{coffeeShop.name}에서 쏩니다</span>
+              <span className="text-sm font-medium text-gray-600">
+                {coffeeShop ? `${coffeeShop.name}에서 쏩니다` : '빠른 주문 세션'}
+              </span>
             </div>
 
             <OrderCountdownInfoWrapper
               createdAt={order.created_at}
               expiresAt={order.expires_at}
               title={order.title}
-              address={coffeeShop.address}
+              address={coffeeShop?.address}
             />
             
             {/* Share Session Button */}
             <div className="mt-6">
-              <ShareSessionButton 
-                shareCode={shareCode}
-                orderTitle={order.title}
-                shopName={coffeeShop.name}
-              />
+                          <ShareSessionButton 
+              shareCode={shareCode}
+              orderTitle={order.title}
+              shopName={coffeeShop?.name || '빠른 주문'}
+            />
             </div>
 
 
@@ -163,7 +279,8 @@ export default async function OrderPage({ params }: OrderPageProps) {
                       {/* Table Rows */}
                       <div className="space-y-3">
                         {orderSelections.map((sel, index) => {
-                          const menuItems = sel.menu_items as any;
+                          // Handle both snapshot and fallback data
+                          const menuItems = (sel as any).order_menu_snapshots || (sel as any).menu_items;
                           const menuName = Array.isArray(menuItems) ? menuItems[0]?.name || "-" : menuItems?.name || "-";
                           const menuPrice = Array.isArray(menuItems) ? menuItems[0]?.price || 0 : menuItems?.price || 0;
                           
@@ -228,7 +345,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                         <div className="text-center">
                           <ReceiptPopup 
                             mergedMenu={mergedMenu}
-                            coffeeShopName={coffeeShop.name}
+                            coffeeShopName={coffeeShop?.name || '빠른 주문'}
                             orderTitle={order.title}
                           />
                         </div>
