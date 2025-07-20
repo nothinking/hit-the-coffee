@@ -51,14 +51,18 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
   // Gemini API를 사용한 세션 이름 자동 생성 함수
   async function generateFunTitle(): Promise<string> {
     try {
+      console.log('Generating title for shopName:', shopName)
       const response = await fetch('/api/generate-session-name', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ shopName })
       })
       
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('API response:', data)
       if (data.success) {
+        console.log('Generated title:', data.title)
         return data.title
       } else {
         throw new Error('Failed to generate title')
@@ -76,7 +80,9 @@ export function StartNewOrderForm({ shopId, shopName }: { shopId: string; shopNa
         "오후의 힐링 🌅",
         "새로운 메뉴 시도 🆕"
       ]
-      return fallbackTitles[Math.floor(Math.random() * fallbackTitles.length)]
+      const fallbackTitle = fallbackTitles[Math.floor(Math.random() * fallbackTitles.length)]
+      console.log('Using fallback title:', fallbackTitle)
+      return fallbackTitle
     }
   }
 
