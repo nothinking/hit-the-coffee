@@ -193,7 +193,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
                               </div>
 
                               {/* Mobile View */}
-                              <div className="md:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 space-y-3">
+                              <div className="md:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center">
@@ -204,13 +204,13 @@ export default async function OrderPage({ params }: OrderPageProps) {
                                       <div className="text-sm text-gray-600">{menuName}</div>
                                     </div>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="font-semibold text-blue-600 text-lg">{formatPrice(menuPrice)}</div>
-                                    <div className="text-sm text-gray-500">수량: {sel.quantity}</div>
+                                  <div className="flex items-center gap-3">
+                                    <div className="text-right">
+                                      <div className="font-semibold text-blue-600 text-lg">{formatPrice(menuPrice)}</div>
+                                      <div className="text-sm text-gray-500">수량: {sel.quantity}</div>
+                                    </div>
+                                    <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
                                   </div>
-                                </div>
-                                <div className="flex justify-end pt-2 border-t border-gray-100">
-                                  <OrderSelectionDeleteButton shopId={order.coffee_shop_id} selectionId={sel.id} />
                                 </div>
                               </div>
                             </div>
