@@ -318,10 +318,10 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
     <div className="container mx-auto px-4 py-8 max-w-6xl pt-20">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{coffeeShop.name}</h1>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Coffee className="w-4 h-4" />
                 <span>{menuItems.length}개 메뉴</span>
@@ -365,27 +365,21 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                   <Coffee className="w-5 h-5" />
                 </CardTitle>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-row gap-2">
                 {menuItems.length > 0 && (
                   <>
                     <Button 
                       onClick={() => setShowAddForm(true)}
                       variant="outline"
+                      className="w-auto"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       메뉴 추가
                     </Button>
                     <Button 
-                      onClick={() => setShowSmartAdd(true)}
-                      variant="outline"
-                    >
-                      <Edit3 className="w-4 h-4 mr-2" />
-                      스마트 추가
-                    </Button>
-                    <Button 
                       onClick={handleResetAllMenus}
                       variant="outline"
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 w-auto"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       전체 리셋
@@ -399,8 +393,7 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
             {/* Smart Menu Add Section */}
             {showSmartAdd && (
               <div className="p-6 bg-gray-50 rounded-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">스마트 메뉴 추가</h3>
+                <div className="flex justify-end mb-4">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -497,11 +490,11 @@ export default function CoffeeShopDetailPage({ params }: CoffeeShopDetailPagePro
                 <h3 className="text-lg font-medium text-gray-900 mb-2">메뉴가 없습니다</h3>
                 <p className="text-gray-600 mb-4">첫 번째 메뉴를 추가해보세요</p>
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={() => setShowAddForm(true)}>
+                  <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto">
                     <Plus className="w-4 h-4 mr-2" />
                     메뉴 추가
                   </Button>
-                  <Button onClick={() => setShowSmartAdd(true)} variant="outline">
+                  <Button onClick={() => setShowSmartAdd(true)} variant="outline" className="w-full sm:w-auto">
                     <Edit3 className="w-4 h-4 mr-2" />
                     스마트 추가
                   </Button>
