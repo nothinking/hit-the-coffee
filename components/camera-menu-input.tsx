@@ -133,6 +133,7 @@ export function CameraMenuInput({ onMenuExtracted, onCancel }: CameraMenuInputPr
           const menus = JSON.parse(jsonText)
           if (Array.isArray(menus) && menus.length > 0) {
             onMenuExtracted?.(menus)
+            setCapturedImage(null) // 메뉴 추출 완료 시 이미지 영역 숨기기
             toast({
               title: "메뉴 추출 완료",
               description: `${menus.length}개의 메뉴를 추출했습니다.`

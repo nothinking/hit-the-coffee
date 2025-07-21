@@ -341,6 +341,11 @@ export function MenuInputForm({ onMenusExtracted, onReset, shopId, onMenusAdded 
           if (Array.isArray(menus) && menus.length > 0) {
             setExtractedMenus(menus)
             onMenusExtracted(menus)
+            // 메뉴 추출 완료 시 파일 업로드 영역 숨기기
+            if (inputMethod === 'file') {
+              setUploadedFile(null)
+              setFilePreview(null)
+            }
             toast({
               title: "메뉴 추출 완료",
               description: `${menus.length}개의 메뉴를 추출했습니다.`
