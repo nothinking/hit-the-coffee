@@ -249,7 +249,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
               {/* Show saved order selections below the form */}
               <div className="mt-8">
                 {/* 주문현황 섹션 - 항상 표시 */}
-                <AutoRefreshWrapper intervalMs={5000}>
+                <AutoRefreshWrapper intervalMs={3000}>
                   <div className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg p-4 sm:p-6 max-w-2xl mx-auto">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4 sm:mb-6">

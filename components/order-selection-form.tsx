@@ -11,6 +11,7 @@ import { submitOrderSelections } from "@/app/order/[shareCode]/actions"
 import { X, Plus, Minus, ShoppingCart, Trash2 } from "lucide-react"
 import { createPortal } from "react-dom"
 import { formatPrice } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 interface MenuItem {
   id: string
@@ -28,6 +29,7 @@ interface OrderSelectionFormProps {
 export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSelectionFormProps) {
   const { toast } = useToast()
   const isMobile = useIsMobile()
+  const router = useRouter()
 
   /* UI state */
   const [participantName, setParticipantName] = useState("")
@@ -154,6 +156,9 @@ export function OrderSelectionForm({ orderId, menuItems, orderStatus }: OrderSel
           setParticipantName(""); // 이름 입력란도 리셋
           setShowNamePopup(false); // 팝업 닫기
           setShowMenuPopup(false); // 메뉴 팝업도 닫기
+          
+          // 주문 완료 후 즉시 페이지 새로고침하여 주문 현황 업데이트
+          router.refresh();
         } else {
           toast({
             title: "주문 실패",
